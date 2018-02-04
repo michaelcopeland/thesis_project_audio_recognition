@@ -1,13 +1,18 @@
-# warmup based on mark jay tutorial
+"""Displays real time audio wave form from input stream.
+
+Script uses microphone to receive audio input stream.
+"""
+
+# TO DO: convert to use wave
+# TO DO: convert to input .wav file
+# https://people.csail.mit.edu/hubert/pyaudio/docs/
 
 import time
 import pyaudio
-import struct  # allows moving audio data to ints
+import struct  # allows conversion of audio data to ints
 import numpy as np
 import matplotlib.pyplot as plt
 plt.interactive(True) # ensures matplotlib opens a new window
-
-# %matplotlib tk - make sure plt opens a new window
 
 # format constants
 CHUNK    = 1024 * 2
@@ -28,12 +33,13 @@ stream = p.open(
     frames_per_buffer = CHUNK
 )
 # figure and axes fig size - height width in inches
-fig, ax = plt.subplots(1, figsize=(15, 10))
+fig, ax = plt.subplots(1, figsize=(10, 8))
 
 # variable used to plot
 x = np.arange(0, 2*CHUNK, 2)
 
 #line obj with random data
+#TO DO: don't generate random input
 line, = ax.plot(x, np.random.rand(CHUNK), '-', color='k', lw=0.5)
 
 # axis formatting
@@ -63,10 +69,9 @@ while True:
         fig.canvas.draw()
         fig.canvas.flush_events()
         frame_count += 1
-
-    except:
+    # fix exception
+    except KeyboardInterrupt:
         frame_rate = frame_count / (time.time() - start_time)
         print('Average frames per second: {:.0f} FPS'.format(frame_rate))
         print('Audio stream terminated')
         break
-

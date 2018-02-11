@@ -54,9 +54,9 @@ ax.set_xlim(0, 2*CHUNK)
 ax_fft.set_title('Frequency domain')
 ax_fft.set_xlabel('frequency')
 #ax_fft.set_ylabel('intensity')
-ax_fft.set_xlim(20, RATE / 2)
+ax_fft.set_xlim(20, 20000)
 
-plt.setp(ax, xticks=[0, CHUNK, 2*CHUNK], yticks=[0, 512, 1024])
+plt.setp(ax, xticks=[0, CHUNK, 2*CHUNK], yticks=[0, 256, 512])
 plt.setp(ax_fft, xticks=[20, RATE / 2, RATE])
 
 plt.show()
@@ -68,7 +68,7 @@ start_time  = time.time()
 while True:
     data        = stream.read(CHUNK)                         # returns list of hex
     data_int    = struct.unpack(str(2 * CHUNK) + 'B', data)  # sample twice the chunk because nyquist-shannon
-    data_int_np = np.array(data_int, dtype='b')[::2] + 512
+    data_int_np = np.array(data_int, dtype='b')[::2] + 256
 
     line.set_ydata(data_int_np)
 

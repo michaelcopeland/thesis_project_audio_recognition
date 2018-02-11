@@ -51,3 +51,6 @@ fabric.properties
 
 # more jet brains stuff
 .idea/
+
+# ignore wave files
+*.wav

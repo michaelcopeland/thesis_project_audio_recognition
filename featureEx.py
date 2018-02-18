@@ -166,7 +166,7 @@ class featureExtractor():
         window_length = len(sgram_y[0])
 
         points_per_chunk = int(window_length * n_windows * density)
-        print(points_per_chunk)
+        print('points per chunk: ', points_per_chunk)
 
         count = 0
 
@@ -186,7 +186,7 @@ class featureExtractor():
                 y = flat.index(item) % window_length
                 max_idx.append((x * ms_per_chunk, sgram[0][0][y]))
             count += n_windows
-        #print(len(max_idx), "items, first from first 10 are", max_idx[:350:points_per_chunk])
+        print(len(max_idx), "items, first from first 10 are", max_idx[:350:points_per_chunk])
         return max_idx
 
 

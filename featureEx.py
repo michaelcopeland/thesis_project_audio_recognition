@@ -12,6 +12,7 @@ class featureExtractor():
 
     def __init__(self, filename='No file input'):
         self.filename = filename
+        self.helper = WaveHelper(self.filename)
 
     def open_stream(self):
         if (len(sys.argv) < 2):
@@ -60,8 +61,7 @@ class featureExtractor():
 
     def get_audio_data(self):
         """retrieves audio data for the entire wav file"""
-        audio = WaveHelper(self.filename)
-        aud = audio.read_whole()
+        aud = self.helper.read_whole()
 
         #plt.plot(aud)
         plt.title("Waveform of sound file")
@@ -122,6 +122,13 @@ class featureExtractor():
         new_X.append(prev)
         new_y.append(np.mean(d))
         return new_X, new_y
+
+    def chunk(self, length, step):
+        # lower, upper, step
+        for i in range(0, length, step):
+            yield length[i:i+step]
+
+
 
 
 if __name__ == '__main__':

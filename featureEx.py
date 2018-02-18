@@ -64,7 +64,7 @@ class featureExtractor():
         aud = self.helper.read_whole()
 
         #plt.plot(aud)
-        plt.title("Waveform of sound file")
+        #plt.title("Waveform of sound file")
         #plt.show()
         return aud
 
@@ -123,24 +123,88 @@ class featureExtractor():
         new_y.append(np.mean(d))
         return new_X, new_y
 
-    def chunk(self, length, step):
+    @staticmethod
+    def chunks(snippet, step):
         # lower, upper, step
-        for i in range(0, length, step):
-            yield length[i:i+step]
+        for i in range(0, len(snippet), step):
+            yield snippet[i:i+step]
 
+    def generate_spectrogram(self):
+        ms_per_chunk = 16
+
+        sgram = []
+        s_per_n = self.helper.samples_per_n_mili(ms_per_chunk)
+
+        count = 1
+
+        for chunk in self.chunks(self.get_audio_data(), s_per_n):
+            sgram.append(self.get_frequencies(chunk, s_per_n, self.wf.getframerate()))
+            print('\rChunk {}'.format(count), end='')
+            count += 1
+        print()
+
+        freq_scales = []
+        for elem in sgram:
+            if elem[0] not in freq_scales:
+                freq_scales.append(elem[0])
+
+        #print(len(freq_scales))
+        #print(sgram[0][0][:10])
+
+        sgram_y = [elem[1] for elem in sgram]
+
+        #plt.plot(sgram[0][0], sgram_y[0])
+        #plt.show()
+
+        return sgram, sgram_y
+
+    def generate_constellation_map(self):
+        ms_per_chunk = 16
+        sgram, sgram_y = self.generate_spectrogram()
+        density = 0.02 # want top 2% of points
+        n_windows = 5
+        window_length = len(sgram_y[0])
+
+        points_per_chunk = int(window_length * n_windows * density)
+        print(points_per_chunk)
+
+        count = 0
+
+        # time: ms, freq: mel
+        max_idx = []
+
+        for window in self.chunks(sgram_y, n_windows):
+            # flatten the multidimensional windows into a one dimensional list
+            flat = [item for sulist in window for item in sulist]
+            # retrieve top points
+            sort = sorted(flat, reverse=True)[:points_per_chunk]
+
+            for item in sort:
+                # which is x part of
+                x = count + int(flat.index(item)/window_length)
+                # how far along the frequency spectrum it is
+                y = flat.index(item) % window_length
+                max_idx.append((x * ms_per_chunk, sgram[0][0][y]))
+            count += n_windows
+        #print(len(max_idx), "items, first from first 10 are", max_idx[:350:points_per_chunk])
+        return max_idx
 
 
 
 if __name__ == '__main__':
+
+
     fe = featureExtractor(filename=sys.argv[1])
     fe.open_stream()
     fe.print_wav_stats()
+    fe.generate_constellation_map()
+
     #fe.get_fft()
 
-    audio = fe.get_audio_data()
-    sample_rate = fe.wf.getframerate()
-    frequencies = fe.get_frequencies(audio, len(audio), sample_rate)
+    #audio = fe.get_audio_data()
+    #sample_rate = fe.wf.getframerate()
+    #frequencies = fe.get_frequencies(audio, len(audio), sample_rate)
 
-    plt.plot(*frequencies)
-    plt.show()
+    #plt.plot(*frequencies)
+    #plt.show()
     #fe.play()

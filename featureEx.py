@@ -130,33 +130,54 @@ class featureExtractor():
             yield snippet[i:i+step]
 
     def generate_spectrogram(self):
-        ms_per_chunk = 16
+        # ms_per_chunk = 16
 
         sgram = []
-        s_per_n = self.helper.samples_per_n_mili(ms_per_chunk)
+        s_per_n = 1024 #self.helper.samples_per_n_mili(ms_per_chunk)
+        print('samples: ', s_per_n)
 
         count = 1
-
+        # for chunk in self.chunks(self.get_audio_data(), s_per_n):
         for chunk in self.chunks(self.get_audio_data(), s_per_n):
+
+            # s_per_n changed to chunk size 1024
             sgram.append(self.get_frequencies(chunk, s_per_n, self.wf.getframerate()))
             print('\rChunk {}'.format(count), end='')
             count += 1
         print()
 
-        freq_scales = []
-        for elem in sgram:
-            if elem[0] not in freq_scales:
-                freq_scales.append(elem[0])
-
+        #freq_scales = []
+        #for elem in sgram:
+        #    if elem[0] not in freq_scales:
+        #        freq_scales.append(elem[0])
         #print(len(freq_scales))
         #print(sgram[0][0][:10])
+        self.to_csv(sgram)
 
-        sgram_y = [elem[1] for elem in sgram]
+        sgram_y = np.array([], dtype=np.float_, ndmin=1)
+        for li in sgram:
+            sgram_y = np.hstack((sgram_y, li[1]))
+            #else:
+             #   sgram_y = np.vstack((sgram_y, li[1]))
 
-        #plt.plot(sgram[0][0], sgram_y[0])
-        #plt.show()
+        img = plt.matshow(sgram_y.T, origin='lower', extent=[0, 1000, 0, 350])
+
+        img.set_cmap('gnuplot')
+        plt.show()
 
         return sgram, sgram_y
+
+    def to_csv(self, iterable):
+        """helper method
+
+        log to csv, iterables may be nested lists, deal with it
+        """
+        with open('sgram.csv', 'w') as myfile:
+            for list in iterable:
+                for elem in list:
+                    myfile.write(',' + str(elem))
+                myfile.write('\n')
+        myfile.close()
 
     def generate_constellation_map(self):
         ms_per_chunk = 16
@@ -197,7 +218,7 @@ if __name__ == '__main__':
     fe = featureExtractor(filename=sys.argv[1])
     fe.open_stream()
     fe.print_wav_stats()
-    fe.generate_constellation_map()
+    fe.generate_spectrogram()
 
     #fe.get_fft()
 
@@ -208,3 +229,5 @@ if __name__ == '__main__':
     #plt.plot(*frequencies)
     #plt.show()
     #fe.play()
+
+    # TODO: consider integrating pydub

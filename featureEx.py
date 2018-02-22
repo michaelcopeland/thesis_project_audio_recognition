@@ -1,3 +1,5 @@
+# script for general testing
+
 import sys
 import wave
 import pyaudio
@@ -24,39 +26,6 @@ class featureExtractor():
         print('Opened {0}'.format(self.filename))
 
         self.wf = wave.open(self.filename)
-
-    def play(self):
-        print('play!')
-        self.p = pyaudio.PyAudio()
-
-        # pyaudio config defaults
-        self.FORMAT = self.p.get_format_from_width(self.wf.getsampwidth())
-        self.CHANNELS = self.wf.getnchannels()
-        self.RATE = self.wf.getframerate()  # changes the pitch
-        self.CHUNK = 1024
-
-        self.stream = self.p.open(
-            format=self.FORMAT,
-            channels=self.CHANNELS,
-            rate=self.RATE,
-            output=True,
-            frames_per_buffer=self.CHUNK
-        )
-
-        start_time = time.time()
-        # the wave chunks are a series of hex length 2048
-        data = self.wf.readframes(self.CHUNK)
-        while len(data) > 0:
-            # plays the file
-            self.stream.write(data)
-            data = self.wf.readframes(self.CHUNK)
-
-        stop_time = time.time()
-        print('Elapsed play time: {0:.5f} seconds'.format(stop_time - start_time))
-        self.stream.stop_stream()
-        self.stream.close()
-        self.p.terminate()
-        print('playback done')
 
     def print_wav_stats(self):
         print(self.wf.getparams())

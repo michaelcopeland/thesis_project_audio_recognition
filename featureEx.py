@@ -6,6 +6,8 @@ from scipy.fftpack import fft
 import matplotlib.pyplot as plt
 import time
 from wavehelper import WaveHelper
+from itertools import product
+import hashlib
 
 class featureExtractor():
     """Retrieves features from audio files"""
@@ -130,10 +132,10 @@ class featureExtractor():
             yield snippet[i:i+step]
 
     def generate_spectrogram(self):
-        # ms_per_chunk = 16
+        ms_per_chunk = 16
 
         sgram = []
-        s_per_n = 1024 #self.helper.samples_per_n_mili(ms_per_chunk)
+        s_per_n = self.helper.samples_per_n_mili(ms_per_chunk) #1024
         print('samples: ', s_per_n)
 
         count = 1
@@ -152,37 +154,57 @@ class featureExtractor():
         #        freq_scales.append(elem[0])
         #print(len(freq_scales))
         #print(sgram[0][0][:10])
-        self.to_csv(sgram)
 
-        sgram_y = np.array([], dtype=np.float_, ndmin=1)
-        for li in sgram:
-            sgram_y = np.hstack((sgram_y, li[1]))
-            #else:
-             #   sgram_y = np.vstack((sgram_y, li[1]))
+        sgram_y = [sg[1] for sg in sgram]
 
-        img = plt.matshow(sgram_y.T, origin='lower', extent=[0, 1000, 0, 350])
+        #can't plot this
+        #img = plt.matshow(np.array(sgram_y).T, origin='lower', extent=[0, 1000, 0, 350])
 
-        img.set_cmap('gnuplot')
-        plt.show()
+        #img.set_cmap('gnuplot')
+        #plt.show()
+
+        print('Frequency range is ', sgram[0][0][0], sgram[0][0][-1])
+        print('Time range is', 0, ms_per_chunk * len(sgram_y))
 
         return sgram, sgram_y
+
+    def pad(self, st, length):
+        """Adds zeros to the beginning of a string"""
+        num_zeros = length - len(st)
+        if num_zeros <= 0:
+            return st
+        return (num_zeros* '0')+st
+
+    def generate_hash(self, pair):
+        # pair is defined as ((t1: ms, f1: mel), (t2: ms, f2: mel))
+        # hash is defined as f1:f2:t2-t1:t1
+        f1 = self.pad(bin(pair[0][1]).lstrip('-0b'), 12)
+        f2 = self.pad(bin(pair[1][1]).lstrip('-0b'), 12)
+        tdelta = self.pad(bin(pair[1][0] - pair[0][0]).lstrip('-0b'), 10)
+        t1 = self.pad(bin(pair[0][0]).lstrip('-0b'), 22)
+
+        ret = (f1 + f2 + tdelta + t1).encode()
+
+        h = hashlib.sha1()
+        h.update(ret)
+        res = h.hexdigest()
+        return res #int(ret, 2).to_bytes((len(ret) + 7)//8, sys.byteorder)
 
     def to_csv(self, iterable):
         """helper method
 
         log to csv, iterables may be nested lists, deal with it
         """
-        with open('sgram.csv', 'w') as myfile:
+        with open('sgram_y_np.csv', 'w') as myfile:
             for list in iterable:
                 for elem in list:
                     myfile.write(',' + str(elem))
                 myfile.write('\n')
         myfile.close()
 
-    def generate_constellation_map(self):
+    def generate_constellation_map(self, sgram, sgram_y):
         ms_per_chunk = 16
-        sgram, sgram_y = self.generate_spectrogram()
-        density = 0.02 # want top 2% of points
+        density = 0.02  # want top 2% of points
         n_windows = 5
         window_length = len(sgram_y[0])
 
@@ -196,6 +218,7 @@ class featureExtractor():
 
         for window in self.chunks(sgram_y, n_windows):
             # flatten the multidimensional windows into a one dimensional list
+
             flat = [item for sulist in window for item in sulist]
             # retrieve top points
             sort = sorted(flat, reverse=True)[:points_per_chunk]
@@ -210,7 +233,28 @@ class featureExtractor():
         print(len(max_idx), "items, first from first 10 are", max_idx[:350:points_per_chunk])
         return max_idx
 
+    def fingerprint(self):
+        st = time.time()
+        sgram, sgram_y = self.generate_spectrogram()
+        max_id = self.generate_constellation_map(sgram, sgram_y)
 
+        density = 0.02  # want top 2% of points
+        n_windows = 5
+        window_length = len(sgram_y[0])
+
+        points_per_chunk = int(window_length * n_windows * density)
+        print('points per chunk: ', points_per_chunk)
+
+        idx = 0
+        hashlist = []
+
+        for coord in max_id[::points_per_chunk]:
+            idx += points_per_chunk
+            hashlist.append([self.generate_hash(pair) for pair in product((coord,), max_id[idx:idx + points_per_chunk])])
+        et = time.time()
+        print('elapsed hash time: ', et - st)
+        print('hashlist length: ', len(hashlist))
+        print(hashlist[0:10])
 
 if __name__ == '__main__':
 
@@ -218,7 +262,7 @@ if __name__ == '__main__':
     fe = featureExtractor(filename=sys.argv[1])
     fe.open_stream()
     fe.print_wav_stats()
-    fe.generate_spectrogram()
+    fe.fingerprint()
 
     #fe.get_fft()
 

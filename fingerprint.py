@@ -13,7 +13,7 @@ import hashlib
 from operator import itemgetter
 
 IDX_FREQ_I = 0
-IDX_FREQ_J = 1
+IDX_TIME_J = 1
 
 DEFAULT_FREQ = 44100
 
@@ -23,7 +23,7 @@ DEFAULT_FREQ = 44100
 # TODO: check effects for different values
 DEFAULT_WINDOW_SIZE = 4096
 
-DEFAULT_OVERLAP_RATION = 0.5
+DEFAULT_OVERLAP_RATIO = 0.5
 
 ######################################################################
 # Degree to which a fingerprint can be paired with its neighbors --
@@ -41,11 +41,96 @@ PEAK_NEIGHBORHOOD_SIZE = 20
 MIN_HASH_TIME_DELTA = 0
 MAX_HASH_TIME_DELTA = 200
 
-PEAK_SORT = True
+PEAK_SORT = False
 
 ######################################################################
 # Number of bits to throw away from the front of the SHA1 hash in the
 # fingerprint calculation. The more you throw away, the less storage, but
 # potentially higher collisions and misclassifications when identifying songs.
 FINGERPRINT_REDUCTION = 20
+
+def fingerprint(channel_samples,
+                frame_rate=DEFAULT_FREQ,
+                wsize=DEFAULT_WINDOW_SIZE,
+                overlap_ratio=DEFAULT_OVERLAP_RATIO,
+                fan_val=DEFAULT_FAN_VALUE,
+                min_amp=DEFAULT_MIN_AMP):
+
+    # FFT + conversion to spectral domain
+    arr2D = mlab.specgram(channel_samples,
+                          NFFT=wsize,
+                          Fs=frame_rate,
+                          window=mlab.window_hanning,
+                          noverlap=int(wsize * overlap_ratio))[0]
+
+    # log transform
+    arr2D = 10 * np.log10(arr2D)
+    arr2D[arr2D == -np.inf] = 0
+
+    # find local maxima
+    local_maxima = get_2D_peaks(arr2D, plot=False, min_amp=min_amp)
+    local_maxima = np.array(local_maxima)
+
+    # return hashes
+    return generate_hashes(local_maxima, fan_value=fan_val)
+
+def get_2D_peaks(arr2D, plot=True, min_amp=DEFAULT_MIN_AMP):
+    struct = generate_binary_structure(2, 1)
+    neighborhood = iterate_structure(struct, PEAK_NEIGHBORHOOD_SIZE)
+
+    # find local maxima
+    localmax = maximum_filter(arr2D, footprint=neighborhood) == arr2D
+    background = (arr2D == 0)
+    eroded_background = binary_erosion(background, structure=neighborhood, border_value=1)
+
+    # boolean mask of 2d array with True peaks
+    detected_peaks = localmax ^ eroded_background
+
+    # extract peaks
+    amps = arr2D[detected_peaks]
+    j, i = np.where(detected_peaks)
+
+    # filter peaks
+    amps = amps.flatten()
+    peaks = zip(i, j, amps) # time, freq, amp
+    peaks_filtered = [x for x in peaks if x[2] > min_amp]
+
+    # get idx for freq and time
+    freq_idx = [x[1] for x in peaks_filtered]
+    time_idex = [x[0] for x in peaks_filtered]
+
+    if plot:
+        print('Plotting!')
+        fix, ax = plt.subplots()
+        ax.imshow(arr2D)
+        ax.scatter(time_idex, freq_idx)
+        ax.set_xlabel('Time')
+        ax.set_ylabel('Frequency')
+        ax.set_title('Spectrogram')
+        plt.gca().invert_yaxis()
+        plt.show()
+
+    return zip(freq_idx, time_idex)
+
+def generate_hashes(peaks, fan_value=DEFAULT_FAN_VALUE):
+    if PEAK_SORT:
+        peaks.sort(key=itemgetter(1))
+
+    for i in range(peaks.size):
+        for j in range(1, fan_value):
+            if (i+j) < peaks.size:
+
+                freq1 = peaks[i][IDX_FREQ_I]
+                freq2 = peaks[i+j][IDX_FREQ_I]
+
+                t1 = peaks[i][IDX_TIME_J]
+                t2 = peaks[i+j][IDX_TIME_J]
+
+                tdelta = t2 - t1
+
+                if tdelta > MIN_HASH_TIME_DELTA and tdelta <= MIN_HASH_TIME_DELTA:
+                    h = hashlib.sha1(
+                        '%s|%s|%s' % (str(freq1), str(freq2), str(tdelta))
+                    )
+                    yield (h.hexdigest()[0:FINGERPRINT_REDUCTION], t1)
 

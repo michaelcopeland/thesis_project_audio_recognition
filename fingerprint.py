@@ -74,7 +74,7 @@ def fingerprint(channel_samples,
     # return hashes
     return generate_hashes(local_maxima, fan_value=fan_val)
 
-def get_2D_peaks(arr2D, plot=True, min_amp=DEFAULT_MIN_AMP):
+def get_2D_peaks(arr2D, plot=False, min_amp=DEFAULT_MIN_AMP):
     struct = generate_binary_structure(2, 1)
     neighborhood = iterate_structure(struct, PEAK_NEIGHBORHOOD_SIZE)
 
@@ -97,28 +97,28 @@ def get_2D_peaks(arr2D, plot=True, min_amp=DEFAULT_MIN_AMP):
 
     # get idx for freq and time
     freq_idx = [x[1] for x in peaks_filtered]
-    time_idex = [x[0] for x in peaks_filtered]
+    time_idx = [x[0] for x in peaks_filtered]
 
     if plot:
         print('Plotting!')
         fix, ax = plt.subplots()
         ax.imshow(arr2D)
-        ax.scatter(time_idex, freq_idx)
+        ax.scatter(time_idx, freq_idx)
         ax.set_xlabel('Time')
         ax.set_ylabel('Frequency')
         ax.set_title('Spectrogram')
         plt.gca().invert_yaxis()
         plt.show()
-
-    return zip(freq_idx, time_idex)
+    # python 2 would cast to a list when using zip, py3 does not
+    return list(zip(freq_idx, time_idx))
 
 def generate_hashes(peaks, fan_value=DEFAULT_FAN_VALUE):
     if PEAK_SORT:
         peaks.sort(key=itemgetter(1))
 
-    for i in range(peaks.size):
+    for i in range(len(peaks)):
         for j in range(1, fan_value):
-            if (i+j) < peaks.size:
+            if (i+j) < len(peaks):
 
                 freq1 = peaks[i][IDX_FREQ_I]
                 freq2 = peaks[i+j][IDX_FREQ_I]
@@ -128,9 +128,15 @@ def generate_hashes(peaks, fan_value=DEFAULT_FAN_VALUE):
 
                 tdelta = t2 - t1
 
-                if tdelta > MIN_HASH_TIME_DELTA and tdelta <= MIN_HASH_TIME_DELTA:
-                    h = hashlib.sha1(
-                        '%s|%s|%s' % (str(freq1), str(freq2), str(tdelta))
-                    )
-                    yield (h.hexdigest()[0:FINGERPRINT_REDUCTION], t1)
+                #print('freq1 - {}, freq2 - {}, t1 - {}, t2 - {}, tdelta - {}'.format(freq1, freq2, t1, t2, tdelta))
+
+                # min is 0, max is 200
+                if (tdelta >= MIN_HASH_TIME_DELTA) and (tdelta <= MIN_HASH_TIME_DELTA):
+                    # string needs encoding for hashing to work
+                    string_to_hash = '{}|{}|{}'.format(str(freq1), str(freq2), str(tdelta)).encode('utf-8')
+
+                    h = hashlib.sha1(string_to_hash)
+                    x = (h.hexdigest()[0:FINGERPRINT_REDUCTION], t1)
+
+                    yield x
 

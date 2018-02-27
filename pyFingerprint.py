@@ -13,9 +13,8 @@ def fingerprint_worker(filename, limit=None, song_name=None):
     frame_rate, channels = hlp.retrieve_audio_data(filename)
 
     result = set()
-    channel_amount = len(channels)
 
-    for channeln, channel in enumerate(channels):
+    for channel_amount, channel in enumerate(channels):
         hashes = fingerprint.fingerprint(channel, frame_rate=frame_rate)
 
         result |= set(hashes)
@@ -25,5 +24,4 @@ def fingerprint_worker(filename, limit=None, song_name=None):
 x, y = fingerprint_worker(sys.argv[1])
 
 print('song name: ', x)
-for _ in y:
-    print(_)
+print(len(y))

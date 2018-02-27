@@ -55,3 +55,7 @@ fabric.properties
 # ignore wave files
 *.wav
 *.csv
+
+# ignore pycache
+__pycache__/
+*.pyc

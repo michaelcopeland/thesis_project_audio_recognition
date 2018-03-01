@@ -19,11 +19,12 @@ DEFAULT_FREQ = 44100
 
 ######################################################################
 # Size of the FFT window, affects frequency granularity
-# Experimented with 1024 mostly
+# Experimented with 1024, 2048 and mostly 4096
 # TODO: check effects for different values
-DEFAULT_WINDOW_SIZE = 4096
+DEFAULT_WINDOW_SIZE = 2048
 
-DEFAULT_OVERLAP_RATIO = 0.5
+# originally 0.5
+DEFAULT_OVERLAP_RATIO = 0.4
 
 ######################################################################
 # Degree to which a fingerprint can be paired with its neighbors --
@@ -41,7 +42,7 @@ PEAK_NEIGHBORHOOD_SIZE = 20
 MIN_HASH_TIME_DELTA = 0
 MAX_HASH_TIME_DELTA = 200
 
-PEAK_SORT = False
+PEAK_SORT = True
 
 ######################################################################
 # Number of bits to throw away from the front of the SHA1 hash in the
@@ -81,6 +82,7 @@ def get_2D_peaks(arr2D, plot=False, min_amp=DEFAULT_MIN_AMP):
     # find local maxima
     localmax = maximum_filter(arr2D, footprint=neighborhood) == arr2D
     background = (arr2D == 0)
+
     eroded_background = binary_erosion(background, structure=neighborhood, border_value=1)
 
     # boolean mask of 2d array with True peaks
@@ -101,12 +103,13 @@ def get_2D_peaks(arr2D, plot=False, min_amp=DEFAULT_MIN_AMP):
 
     if plot:
         print('Plotting!')
-        fix, ax = plt.subplots()
-        ax.imshow(arr2D)
+        fig, ax = plt.subplots()
+        ax.imshow(arr2D, cmap='gnuplot')
         ax.scatter(time_idx, freq_idx)
         ax.set_xlabel('Time')
         ax.set_ylabel('Frequency')
         ax.set_title('Spectrogram')
+        ax.set_aspect('auto', adjustable='box')
         plt.gca().invert_yaxis()
         plt.show()
     # python 2 would cast to a list when using zip, py3 does not
@@ -114,7 +117,7 @@ def get_2D_peaks(arr2D, plot=False, min_amp=DEFAULT_MIN_AMP):
 
 def generate_hashes(peaks, fan_value=DEFAULT_FAN_VALUE):
     if PEAK_SORT:
-        peaks.sort(key=itemgetter(1))
+        sorted(peaks, key=itemgetter(1))
 
     for i in range(len(peaks)):
         for j in range(1, fan_value):
@@ -131,9 +134,9 @@ def generate_hashes(peaks, fan_value=DEFAULT_FAN_VALUE):
                 #print('freq1 - {}, freq2 - {}, t1 - {}, t2 - {}, tdelta - {}'.format(freq1, freq2, t1, t2, tdelta))
 
                 # min is 0, max is 200
-                if (tdelta >= MIN_HASH_TIME_DELTA) and (tdelta <= MIN_HASH_TIME_DELTA):
+                if (tdelta >= MIN_HASH_TIME_DELTA) and (tdelta <= MAX_HASH_TIME_DELTA):
                     # string needs encoding for hashing to work
-                    string_to_hash = '{}|{}|{}'.format(str(freq1), str(freq2), str(tdelta)).encode('utf-8')
+                    string_to_hash = '{}{}{}'.format(str(freq1), str(freq2), str(tdelta)).encode('utf-8')
 
                     h = hashlib.sha1(string_to_hash)
                     x = (h.hexdigest()[0:FINGERPRINT_REDUCTION], t1)

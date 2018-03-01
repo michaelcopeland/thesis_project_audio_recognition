@@ -129,7 +129,6 @@ def retrieve_audio_data(filename, limit=None):
             raise Exception('hack')
 
     # this does not work as intended
-    # TODO: just convert all files to 16 or 32. Later
     except Exception:#audioop.error:
         print('Audio is 24-bit\nUsing wave')
         helper = AudioHelper(filename)
@@ -152,15 +151,18 @@ def retrieve_audio_data(filename, limit=None):
 
 # testing main
 if __name__ == '__main__':
-    # TODO: 24-bit could be an issue with pydub. Check for solutions with wave
     file = sys.argv[1]
-    #helper = AudioHelper(file)
-    #fs, _, data = helper.get_wav_audio_data(file)
+    helper = AudioHelper(file)
+    fs, _, data = helper.get_wav_audio_data(file)
 
-    fs, data = retrieve_audio_data(file)
-    plt.plot(*data)
+    #fs, data = retrieve_audio_data(file)
+    plt.plot(data)
     plt.show()
 
     print('frame rate {}'.format(fs), 'data {}'.format(data[int(len(data)/4):len(data)]))
     print('\n')
+
+    # TODO: 24-bit could be an issue with pydub. Check for solutions with wave
+    # TODO: just convert all files to 16 or 32.
+    # Or maybe just do yourself a favor and use wavio
 

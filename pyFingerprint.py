@@ -25,4 +25,5 @@ x, y = fingerprint_worker(sys.argv[1])
 print('song name: ', x)
 print('Number of generated hashes: ',len(y))
 #for i in y:
-    #print(i)
+#    print(i)
+

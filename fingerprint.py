@@ -21,10 +21,9 @@ DEFAULT_FREQ = 44100
 # Size of the FFT window, affects frequency granularity
 # Experimented with 1024, 2048 and mostly 4096
 # TODO: check effects for different values
-DEFAULT_WINDOW_SIZE = 2048
+DEFAULT_WINDOW_SIZE = 4096
 
-# originally 0.5
-DEFAULT_OVERLAP_RATIO = 0.4
+DEFAULT_OVERLAP_RATIO = 0.5
 
 ######################################################################
 # Degree to which a fingerprint can be paired with its neighbors --

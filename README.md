@@ -1,4 +1,21 @@
-# audioExtraction
+# Landmark based audio fingerprinter
+
+In order to fingerprint a .wav song:
+
+<pre> python pyFingerprint.py yourfile.wav </pre>
+
+It works for 32, 16, and 8 bit wav. Still working on the 24-bit.
+
+Requirements:
+matplotlib
+numpy
+pyaudio
+pydub
+wave
+scipy
+hashlib
+
+######OTHER STUFF########
 
 The featureEx class can extract the spectral domain from a wave file. It computes a spectrogram and can split it into a number of chunks.
 

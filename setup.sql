@@ -1,5 +1,6 @@
-CREATE DATABASE audioExtraction;
-USE audioExtraction;
+#CREATE DATABASE audioExtraction;
+#USE audioExtraction;
+DROP tables fingerprints, songs;
 
 CREATE TABLE fingerprints(
 hashkey     varchar(20) PRIMARY KEY,
@@ -9,7 +10,7 @@ INDEX(hashkey)
 );
 
 CREATE TABLE songs(
-song_id       int unsigned NOT NULL AUTO_INCREMENT UNIQUE PRIMARY KEY,
+song_id       int unsigned AUTO_INCREMENT PRIMARY KEY,
 song_name     varchar(100) NOT NULL,
-fingerprinted boolean DEFAULT FALSE
+fgp           binary DEFAULT 0
 );

@@ -5,8 +5,10 @@ from audioHelper import AudioHelper
 import audioHelper as hlp
 import sys
 import os
+import time
 
 def fingerprint_worker(filename, limit=None, song_name=None):
+    st = time.time()
     song_name, extension = os.path.splitext(filename)
     print('Fingerprinting ', song_name, ' with extension', extension)
 
@@ -18,12 +20,14 @@ def fingerprint_worker(filename, limit=None, song_name=None):
 
         result |= set(hashes)
 
+    ft = time.time() - st
+    print('Elapsed time is: ', ft)
     return song_name, result
 
 x, y = fingerprint_worker(sys.argv[1])
 
 print('song name: ', x)
 print('Number of generated hashes: ',len(y))
-#for i in y:
-#    print(i)
+for i in y:
+    print('\rHash value - time index: {}'.format(i), end='')
 

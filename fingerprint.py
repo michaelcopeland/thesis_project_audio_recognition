@@ -68,7 +68,7 @@ def fingerprint(channel_samples,
     arr2D[arr2D == -np.inf] = 0
 
     # find local maxima
-    local_maxima = get_2D_peaks(arr2D, plot=False, min_amp=min_amp)
+    local_maxima = get_2D_peaks(arr2D, plot=True, min_amp=min_amp)
     local_maxima = np.array(local_maxima)
 
     # return hashes
@@ -94,7 +94,7 @@ def get_2D_peaks(arr2D, plot=False, min_amp=DEFAULT_MIN_AMP):
     # filter peaks
     amps = amps.flatten()
     peaks = zip(i, j, amps) # time, freq, amp
-    peaks_filtered = [x for x in peaks if x[2] > min_amp]
+    peaks_filtered = [x for x in peaks if x[2] > min_amp] # only consider peaks above a specific amplitude
 
     # get idx for freq and time
     freq_idx = [x[1] for x in peaks_filtered]
@@ -130,7 +130,7 @@ def generate_hashes(peaks, fan_value=DEFAULT_FAN_VALUE):
 
                 tdelta = t2 - t1
 
-                #print('freq1 - {}, freq2 - {}, t1 - {}, t2 - {}, tdelta - {}'.format(freq1, freq2, t1, t2, tdelta))
+                # print('freq1 - {}, freq2 - {}, t1 - {}, t2 - {}, tdelta - {}'.format(freq1, freq2, t1, t2, tdelta))
 
                 # min is 0, max is 200
                 if (tdelta >= MIN_HASH_TIME_DELTA) and (tdelta <= MAX_HASH_TIME_DELTA):

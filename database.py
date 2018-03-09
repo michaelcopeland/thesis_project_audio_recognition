@@ -2,12 +2,12 @@
 
 import MySQLdb as mysql
 
-FINGERPRINT_TABLE = 'fingerprints'
-SONGS_TABLE = 'audioextraction.songs'
+FINGERPRINTS_TABLE = 'fingerprints'
+SONGS_TABLE = 'songs'
 
-FINGERPRINT_FILED_HASHKEY = 'hashkey'
-FINGERPRINT_FILED_SONGNAME = 'song_name'
-FINGERPRINT_FILED_TIMEOFFSET = 'time_offset'
+FINGERPRINT_FIELD_HASHKEY = 'hashkey'
+FINGERPRINT_FIELD_SONGNAME = 'song_name'
+FINGERPRINT_FIELD_TIMEOFFSET = 'time_offset'
 
 SONGS_FIELD_SONG_ID = 'song_id'
 SONGS_FIELD_SONG_NAME = 'song_name'
@@ -25,6 +25,7 @@ def connect():
 
 def close_database():
     connection.close()
+    print('Connection closed.')
 
 connection = connect()
 cur = connection.cursor()
@@ -34,25 +35,46 @@ CREATE TABLE IF NOT EXISTS {} (
 {}     varchar(20) PRIMARY KEY,
 {}     varchar(100) NOT NULL,
 {}     int unsigned NOT NULL,
-INDEX({}));""".format(FINGERPRINT_TABLE, FINGERPRINT_FILED_HASHKEY,
-                      FINGERPRINT_FILED_SONGNAME, FINGERPRINT_FILED_TIMEOFFSET,
-                      FINGERPRINT_FILED_HASHKEY)
+INDEX({}),
+FOREIGN KEY ({}) REFERENCES {}({}) ON DELETE CASCADE 
+);""".format(FINGERPRINTS_TABLE, FINGERPRINT_FIELD_HASHKEY,
+             FINGERPRINT_FIELD_SONGNAME, FINGERPRINT_FIELD_TIMEOFFSET,
+             FINGERPRINT_FIELD_HASHKEY,
+             FINGERPRINT_FIELD_SONGNAME, SONGS_TABLE, SONGS_FIELD_SONG_NAME)
 
 CREATE_SONGS_TABLE= """
 CREATE TABLE IF NOT EXISTS {} (
 {}       int unsigned AUTO_INCREMENT PRIMARY KEY,
 {}       varchar(100) NOT NULL,
-{}       BOOL DEFAULT TRUE 
+{}       tinyint DEFAULT 0,
+UNIQUE KEY {}({})
 );
 """.format(SONGS_TABLE, SONGS_FIELD_SONG_ID,
-           SONGS_FIELD_SONG_NAME, SONGS_FIELD_FINGERPRINTED)
+           SONGS_FIELD_SONG_NAME, SONGS_FIELD_FINGERPRINTED,
+           SONGS_FIELD_SONG_NAME, SONGS_FIELD_SONG_NAME)
 
-INSERT_SONG = """INSERT INTO {} ({}, {}) VALUES (%s, %s));""".format(SONGS_TABLE, SONGS_FIELD_SONG_NAME,
-                                                                     SONGS_FIELD_FINGERPRINTED)
+DROP_FINGERPRINTS = 'DROP TABLE IF EXISTS {}'.format(FINGERPRINTS_TABLE)
+DROP_SONGS        = 'DROP TABLE IF EXISTS {}'.format(SONGS_TABLE)
+
+INSERT_SONG = 'INSERT INTO {}({}, {}) VALUES (\'%s\', \'%s\');'.format(SONGS_TABLE,
+                                                                       SONGS_FIELD_SONG_NAME,
+                                                                       SONGS_FIELD_FINGERPRINTED)
+
+INSERT_FINGERPRINT = 'INSERT INTO {}({},{},{}) VALUES (\'%s\', \'%s\', \'%s\');'.format(FINGERPRINTS_TABLE,
+                                                                                        FINGERPRINT_FIELD_HASHKEY,
+                                                                                        FINGERPRINT_FIELD_SONGNAME,
+                                                                                        FINGERPRINT_FIELD_TIMEOFFSET)
+
+SELECT = 'SELECT {}, {} FROM {} WHERE {} = \'%s\';'.format(FINGERPRINT_FIELD_SONGNAME,
+                                                FINGERPRINT_FIELD_TIMEOFFSET,
+                                                FINGERPRINTS_TABLE,
+                                                FINGERPRINT_FIELD_HASHKEY)
+
+SELECT_ALL = 'SELECT {}, {} FROM {};'.format(FINGERPRINT_FIELD_SONGNAME,
+                                             FINGERPRINT_FIELD_TIMEOFFSET,
+                                             FINGERPRINTS_TABLE)
 
 def clear_database():
-    DROP_FINGERPRINTS = 'DROP TABLE IF EXISTS {}'.format(FINGERPRINT_TABLE)
-    DROP_SONGS        = 'DROP TABLE IF EXISTS {}'.format(SONGS_TABLE)
     try:
         cur.execute(DROP_FINGERPRINTS)
         cur.execute(DROP_SONGS)
@@ -63,8 +85,10 @@ def clear_database():
 
 def setup():
     try:
-        cur.execute(CREATE_FINGERPRINTS_TABLE)
         cur.execute(CREATE_SONGS_TABLE)
+        print('Created songs table.')
+        cur.execute(CREATE_FINGERPRINTS_TABLE)
+        print('Created fingerprints table.')
         connection.commit()
         print('Setup complete!')
     except:
@@ -72,7 +96,7 @@ def setup():
 
 def insert_song(song_name='', fgp=0):
     insert_query = INSERT_SONG % (song_name, fgp)
-    print(insert_query)
+    insert_query.encode('utf-8')
 
     try:
         cur.execute(insert_query)
@@ -81,24 +105,47 @@ def insert_song(song_name='', fgp=0):
     except:
         connection.rollback()
 
-    print(cur.fetchall())
+def insert_fingerprint(hashkey, song_name, time_offset):
+    insert_query = INSERT_FINGERPRINT % (hashkey, song_name, time_offset)
+    insert_query.encode('utf-8')
 
-def test():
-    #query = """CREATE TABLE vlad(name varchar(20) PRIMARY KEY)"""
-    #cur.execute(query)
-    var = 'true name'
-    insert = 'INSERT INTO vlad(name) VALUES (\'{}\');'.format(var)
-    print(insert)
-    cur.execute('INSERT INTO vlad(name) VALUES (\'dsadsa\')')
+    try:
+        cur.execute(insert_query)
+        connection.commit()
+        print('Fingerprint inserted!')
+    except:
+        connection.rollback()
 
+def query(hashkey=None):
+    """
+    Return all tuples associated with hash.
+    If hash is None, returns all entries in the
+    database (be careful with that one!).
+    """
+    print('query!')
+    if hashkey is None:
+        print('Select all')
+        select_query = SELECT_ALL
+    else:
+        print('select')
+        select_query = SELECT % hashkey
+
+    print('query is ', select_query)
+    cur.execute(select_query)
     connection.commit()
+    for s_name, offset in cur:
+        print(s_name, offset)
+        yield (s_name, offset)
 
 connect()
 #clear_database()
 #setup()
-test()
-#insert_song('vlad did it!', True)
+#insert_song('metric', 1)
+insert_song('vlad', 1)
+insert_fingerprint('fsfdsfdsfds', 'metric', 60)
+insert_fingerprint('abc', 'vlad', 2)
+query('fsfdsfdsfds')
 
-close_database()
+#close_database()
 
 

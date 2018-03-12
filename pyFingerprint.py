@@ -45,8 +45,14 @@ def insert_wav_to_db(song_n):
         db.insert_fingerprint(h[0], song_name, h[1])
 
 #reset_database()
-song = 'estring.wav'
-song_name, list_hash = fingerprint_worker(song, limit=10)
+#insert_wav_to_db('101.wav')
+#insert_wav_to_db('estring.wav')
+#insert_wav_to_db('estring2.wav')
+#insert_wav_to_db('river1.wav')
+#insert_wav_to_db('river2.wav')
+#insert_wav_to_db('cmd.wav')
+song = '101.wav'
+song_name, list_hash = fingerprint_worker(song, limit=5)
 print('Number of hashes generated=', len(list_hash))
 x = db.get_matches(list_hash)
 c = 0

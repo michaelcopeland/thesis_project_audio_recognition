@@ -41,7 +41,7 @@ PEAK_NEIGHBORHOOD_SIZE = 20
 MIN_HASH_TIME_DELTA = 0
 MAX_HASH_TIME_DELTA = 200
 
-PEAK_SORT = False
+PEAK_SORT = True
 
 ######################################################################
 # Number of bits to throw away from the front of the SHA1 hash in the
@@ -68,7 +68,7 @@ def fingerprint(channel_samples,
     arr2D[arr2D == -np.inf] = 0
 
     # find local maxima
-    local_maxima = get_2D_peaks(arr2D, plot=False, min_amp=min_amp)
+    local_maxima = get_2D_peaks(arr2D, plot=True, min_amp=min_amp)
     local_maxima = np.array(local_maxima)
 
     # return hashes
@@ -93,36 +93,37 @@ def get_2D_peaks(arr2D, plot=False, min_amp=DEFAULT_MIN_AMP):
 
     # filter peaks
     amps = amps.flatten()
-    peaks = zip(i, j, amps) # time, freq, amp
-    #time = [t[0] for t in peaks]
-    #print('Max time:', max(time))
+    peaks = zip(i, j, amps) # freq, time, amp
+
     peaks_filtered = [x for x in peaks if x[2] > min_amp] # only consider peaks above a specific amplitude
 
     # get idx for freq and time
-    freq_idx = [x[1] for x in peaks_filtered]
-    time_idx = [x[0] for x in peaks_filtered]
+    freq_idx = [x[0] for x in peaks_filtered]
+    time_idx = [x[1] for x in peaks_filtered]
+    #frequency = [x[2] for x in peaks_filtered]
     print('FINGERPRINTER DETAILS ***********')
     print('Number of peaks: ', len(freq_idx))
     print('Number of time idx: ', len(time_idx))
-    print('Length of segment: ', round(max(time_idx) / DEFAULT_FREQ * DEFAULT_WINDOW_SIZE * DEFAULT_OVERLAP_RATIO, 5), 'seconds')
+    print('Length of segment: ', round(len(arr2D[1]) / DEFAULT_FREQ * DEFAULT_WINDOW_SIZE * DEFAULT_OVERLAP_RATIO, 5), 'seconds')
 
     if plot:
         print('Plotting!')
         fig, ax = plt.subplots()
         ax.imshow(arr2D, cmap='gnuplot')
-        ax.scatter(time_idx, freq_idx)
+        ax.scatter(freq_idx, time_idx)
         ax.set_xlabel('Time')
         ax.set_ylabel('Frequency')
         ax.set_title('Spectrogram')
         ax.set_aspect('auto', adjustable='box')
         plt.gca().invert_yaxis()
         plt.show()
+
     # python 2 would cast to a list when using zip, py3 does not
     return list(zip(freq_idx, time_idx))
 
 def generate_hashes(peaks, fan_value=DEFAULT_FAN_VALUE):
     if PEAK_SORT:
-        sorted(peaks, key=itemgetter(1))
+        sorted(peaks, key=itemgetter(0))
 
     for i in range(len(peaks)):
         for j in range(1, fan_value):

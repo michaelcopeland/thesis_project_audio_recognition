@@ -19,7 +19,7 @@ def connect():
     db = mysql.connect(
         host='127.0.0.1',
         user='root',
-        passwd='iamfuzzy222',
+        passwd='',
         db='audioExtraction'
     )
     print('Connected to database!')
@@ -184,16 +184,3 @@ def get_matches(list_of_hashes):
     for hash_k, song_name, time_offset in cur:
         #print('result: ', hash_k, song_name, time_offset)
         yield (song_name, time_offset - map[hash_k])
-
-
-#connect()
-#drop_all_tables()
-#setup()
-#insert_song('song_1', 1)
-#insert_song('song_2', 1)
-#insert_fingerprint('hash_abc', 'song_1', 10)
-#insert_fingerprint('hash_bca', 'song_1', 15)
-#insert_fingerprint('hash_abc', 'song_2', 2)
-#close_database()
-
-

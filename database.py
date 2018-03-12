@@ -19,7 +19,7 @@ def connect():
     db = mysql.connect(
         host='127.0.0.1',
         user='root',
-        passwd='',
+        passwd='iamfuzzy222',
         db='audioExtraction'
     )
     print('Connected to database!')
@@ -127,7 +127,7 @@ def insert_fingerprint(hashkey, song_name, time_offset):
     try:
         cur.execute(insert_query)
         connection.commit()
-        print('Fingerprint inserted!')
+        #print('Fingerprint inserted!')
     except:
         connection.rollback()
 
@@ -173,11 +173,11 @@ def get_matches(list_of_hashes):
 
     values = map.keys()
     values = list(filter(None, values))
-    values = zip(values)
     values = list(values)
+    num_query = len(values)
 
     query = SELECT_MULTIPLE
-    query = query % ', '.join(['%s'] * len(values))
+    query = query % ', '.join(['%s'] * num_query)
 
     cur.execute(query, values)
 

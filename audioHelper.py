@@ -109,14 +109,16 @@ def retrieve_audio_data(filename, limit=None):
         channels   - the audio data of the song whether it is mono or stereo
     """
     try:
+        print('Audio helper: Fetching audio data')
         audio_data = AudioSegment.from_file(filename)
 
         if limit:
             # the limit refers to a segment of audio, by default we want to retrieve the entire audio data
-            audio_data = audio_data[:limit * 1000]
+            audio_data = audio_data[:(limit * 1000)]
 
         # raw data is pydub's representation of the raw audio bytestring
         data = np.fromstring(audio_data.raw_data, dtype=np.int16)
+        #print('data: \n', data, '\nlength of data:', len(data))
 
         channels = []
 
@@ -136,7 +138,7 @@ def retrieve_audio_data(filename, limit=None):
         audio_data = np.array(audio_data)
 
         if limit:
-            audio_data = audio_data[:limit * 1000]
+            audio_data = audio_data[:(limit * 1000)]
 
         audio_data = audio_data.T
         audio_data = audio_data.astype(np.int16)

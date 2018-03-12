@@ -41,7 +41,7 @@ PEAK_NEIGHBORHOOD_SIZE = 20
 MIN_HASH_TIME_DELTA = 0
 MAX_HASH_TIME_DELTA = 200
 
-PEAK_SORT = True
+PEAK_SORT = False
 
 ######################################################################
 # Number of bits to throw away from the front of the SHA1 hash in the
@@ -94,11 +94,17 @@ def get_2D_peaks(arr2D, plot=False, min_amp=DEFAULT_MIN_AMP):
     # filter peaks
     amps = amps.flatten()
     peaks = zip(i, j, amps) # time, freq, amp
+    #time = [t[0] for t in peaks]
+    #print('Max time:', max(time))
     peaks_filtered = [x for x in peaks if x[2] > min_amp] # only consider peaks above a specific amplitude
 
     # get idx for freq and time
     freq_idx = [x[1] for x in peaks_filtered]
     time_idx = [x[0] for x in peaks_filtered]
+    print('FINGERPRINTER DETAILS ***********')
+    print('Number of peaks: ', len(freq_idx))
+    print('Number of time idx: ', len(time_idx))
+    print('Length of segment: ', round(max(time_idx) / DEFAULT_FREQ * DEFAULT_WINDOW_SIZE * DEFAULT_OVERLAP_RATIO, 5), 'seconds')
 
     if plot:
         print('Plotting!')
@@ -134,6 +140,7 @@ def generate_hashes(peaks, fan_value=DEFAULT_FAN_VALUE):
 
                 # min is 0, max is 200
                 if (tdelta >= MIN_HASH_TIME_DELTA) and (tdelta <= MAX_HASH_TIME_DELTA):
+
                     # string needs encoding for hashing to work
                     string_to_hash = '{}{}{}'.format(str(freq1), str(freq2), str(tdelta)).encode('utf-8')
 
@@ -141,4 +148,3 @@ def generate_hashes(peaks, fan_value=DEFAULT_FAN_VALUE):
                     x = (h.hexdigest()[0:FINGERPRINT_REDUCTION], t1)
 
                     yield x
-

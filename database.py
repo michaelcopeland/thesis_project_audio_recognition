@@ -19,7 +19,7 @@ def connect():
     db = mysql.connect(
         host='127.0.0.1',
         user='root',
-        passwd='',
+        passwd='iamfuzzy222',
         db='audioExtraction'
     )
     print('Connected to database!')

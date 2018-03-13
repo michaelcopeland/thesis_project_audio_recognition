@@ -49,103 +49,123 @@ PEAK_SORT = True
 # potentially higher collisions and misclassifications when identifying songs.
 FINGERPRINT_REDUCTION = 20
 
-def fingerprint(channel_samples,
-                frame_rate=DEFAULT_FREQ,
-                wsize=DEFAULT_WINDOW_SIZE,
-                overlap_ratio=DEFAULT_OVERLAP_RATIO,
-                fan_val=DEFAULT_FAN_VALUE,
-                min_amp=DEFAULT_MIN_AMP):
 
-    # FFT + conversion to spectral domain
-    arr2D = mlab.specgram(channel_samples,
-                          NFFT=wsize,
-                          Fs=frame_rate,
-                          window=mlab.window_hanning,
-                          noverlap=int(wsize * overlap_ratio))[0]
+class Fingerprint:
 
-    # log transform
-    arr2D = 10 * np.log10(arr2D)
-    arr2D[arr2D == -np.inf] = 0
+    def __init__(self):
+        self.amps = None
+        self.freq = None
+        self.time = None
 
-    # find local maxima
-    local_maxima = get_2D_peaks(arr2D, plot=True, min_amp=min_amp)
-    local_maxima = np.array(local_maxima)
+    def set_data(self, freq, time, amps):
+        self.amps = amps
+        self.freq = freq
+        self.time = time
 
-    # return hashes
-    return generate_hashes(local_maxima, fan_value=fan_val)
+    def get_unfiltered_data(self):
+        peaks = zip(self.freq, self.time, self.amps)
+        return list(peaks)
 
-def get_2D_peaks(arr2D, plot=False, min_amp=DEFAULT_MIN_AMP):
-    struct = generate_binary_structure(2, 1)
-    neighborhood = iterate_structure(struct, PEAK_NEIGHBORHOOD_SIZE)
+    def fingerprint(self, channel_samples,
+                    frame_rate=DEFAULT_FREQ,
+                    wsize=DEFAULT_WINDOW_SIZE,
+                    overlap_ratio=DEFAULT_OVERLAP_RATIO,
+                    fan_val=DEFAULT_FAN_VALUE,
+                    min_amp=DEFAULT_MIN_AMP):
+        # FFT + conversion to spectral domain
+        arr2D = mlab.specgram(channel_samples,
+                              NFFT=wsize,
+                              Fs=frame_rate,
+                              window=mlab.window_hanning,
+                              noverlap=int(wsize * overlap_ratio))[0]
 
-    # find local maxima
-    localmax = maximum_filter(arr2D, footprint=neighborhood) == arr2D
-    background = (arr2D == 0)
+        # log transform
+        arr2D = 10 * np.log10(arr2D)
+        arr2D[arr2D == -np.inf] = 0
 
-    eroded_background = binary_erosion(background, structure=neighborhood, border_value=1)
+        # find local maxima
+        local_maxima = self.get_2D_peaks(arr2D, plot=False, min_amp=min_amp)
+        local_maxima = np.array(local_maxima)
 
-    # boolean mask of 2d array with True peaks
-    detected_peaks = localmax ^ eroded_background
+        # return hashes
+        return self.generate_hashes(local_maxima, fan_value=fan_val)
 
-    # extract peaks
-    amps = arr2D[detected_peaks]
-    j, i = np.where(detected_peaks)
+    def get_2D_peaks(self, arr2D, plot=False, min_amp=DEFAULT_MIN_AMP):
+        struct = generate_binary_structure(2, 1)
+        neighborhood = iterate_structure(struct, PEAK_NEIGHBORHOOD_SIZE)
 
-    # filter peaks
-    amps = amps.flatten()
-    peaks = zip(i, j, amps) # freq, time, amp
+        # find local maxima
+        localmax = maximum_filter(arr2D, footprint=neighborhood) == arr2D
+        background = (arr2D == 0)
 
-    peaks_filtered = [x for x in peaks if x[2] > min_amp] # only consider peaks above a specific amplitude
+        eroded_background = binary_erosion(background, structure=neighborhood, border_value=1)
 
-    # get idx for freq and time
-    freq_idx = [x[0] for x in peaks_filtered]
-    time_idx = [x[1] for x in peaks_filtered]
-    #frequency = [x[2] for x in peaks_filtered]
-    print('FINGERPRINTER DETAILS ***********')
-    print('Number of peaks: ', len(freq_idx))
-    print('Number of time idx: ', len(time_idx))
-    print('Length of segment: ', round(len(arr2D[1]) / DEFAULT_FREQ * DEFAULT_WINDOW_SIZE * DEFAULT_OVERLAP_RATIO, 5), 'seconds')
+        # boolean mask of 2d array with True peaks
+        detected_peaks = localmax ^ eroded_background
 
-    if plot:
-        print('Plotting!')
-        fig, ax = plt.subplots()
-        ax.imshow(arr2D, cmap='gnuplot')
-        ax.scatter(freq_idx, time_idx)
-        ax.set_xlabel('Time')
-        ax.set_ylabel('Frequency')
-        ax.set_title('Spectrogram')
-        ax.set_aspect('auto', adjustable='box')
-        plt.gca().invert_yaxis()
-        plt.show()
+        # extract peaks
+        amps = arr2D[detected_peaks]
+        j, i = np.where(detected_peaks)  # time, frequency
 
-    # python 2 would cast to a list when using zip, py3 does not
-    return list(zip(freq_idx, time_idx))
 
-def generate_hashes(peaks, fan_value=DEFAULT_FAN_VALUE):
-    if PEAK_SORT:
-        sorted(peaks, key=itemgetter(0))
+        # filter peaks
+        amps = amps.flatten()
+        self.set_data(i, j, amps)
+        peaks = zip(i, j, amps)  # freq, time, amp
 
-    for i in range(len(peaks)):
-        for j in range(1, fan_value):
-            if (i+j) < len(peaks):
+        peaks_filtered = [x for x in peaks if x[2] > min_amp]  # only consider peaks above a specific amplitude
 
-                freq1 = peaks[i][IDX_FREQ_I]
-                freq2 = peaks[i+j][IDX_FREQ_I]
+        # get idx for freq and time
+        freq_idx = [x[0] for x in peaks_filtered]
+        time_idx = [x[1] for x in peaks_filtered]
+        # frequency = [x[2] for x in peaks_filtered]
+        print('FINGERPRINTER DETAILS ***********')
+        print('Number of peaks: ', len(freq_idx))
+        print('Number of time idx: ', len(time_idx))
+        print('Length of segment: ', round(len(arr2D[1]) / DEFAULT_FREQ * DEFAULT_WINDOW_SIZE * DEFAULT_OVERLAP_RATIO, 5),
+              'seconds')
 
-                t1 = peaks[i][IDX_TIME_J]
-                t2 = peaks[i+j][IDX_TIME_J]
+        if plot:
+            print('Plotting!')
+            fig, ax = plt.subplots()
+            ax.imshow(arr2D, cmap='gnuplot')
+            ax.scatter(freq_idx, time_idx)
+            ax.set_xlabel('Time')
+            ax.set_ylabel('Frequency')
+            ax.set_title('Spectrogram')
+            ax.set_aspect('auto', adjustable='box')
+            plt.gca().invert_yaxis()
+            plt.show()
 
-                tdelta = t2 - t1
+        # python 2 would cast to a list when using zip, py3 does not
+        return list(zip(freq_idx, time_idx))
 
-                # print('freq1 - {}, freq2 - {}, t1 - {}, t2 - {}, tdelta - {}'.format(freq1, freq2, t1, t2, tdelta))
+    def generate_hashes(self, peaks, fan_value=DEFAULT_FAN_VALUE):
+        if PEAK_SORT:
+            # sorting peaks by frequency
+            sorted(peaks, key=itemgetter(0))
 
-                # min is 0, max is 200
-                if (tdelta >= MIN_HASH_TIME_DELTA) and (tdelta <= MAX_HASH_TIME_DELTA):
+        for i in range(len(peaks)):
+            for j in range(1, fan_value):
+                if (i + j) < len(peaks):
 
-                    # string needs encoding for hashing to work
-                    string_to_hash = '{}{}{}'.format(str(freq1), str(freq2), str(tdelta)).encode('utf-8')
+                    freq1 = peaks[i][IDX_FREQ_I]
+                    freq2 = peaks[i + j][IDX_FREQ_I]
 
-                    h = hashlib.sha1(string_to_hash)
-                    x = (h.hexdigest()[0:FINGERPRINT_REDUCTION], t1)
+                    t1 = peaks[i][IDX_TIME_J]
+                    t2 = peaks[i + j][IDX_TIME_J]
 
-                    yield x
+                    tdelta = t2 - t1
+
+                    # print('freq1: {}, freq2: {}, t1: {}, t2: {}, tdelta: {}'.format(freq1, freq2, t1, t2, tdelta))
+
+                    # min is 0, max is 200
+                    if (tdelta >= MIN_HASH_TIME_DELTA) and (tdelta <= MAX_HASH_TIME_DELTA):
+                        # string needs encoding for hashing to work
+                        string_to_hash = '{}{}{}'.format(str(freq1), str(freq2), str(tdelta)).encode('utf-8')
+
+                        h = hashlib.sha1(string_to_hash)
+                        x = (h.hexdigest()[0:FINGERPRINT_REDUCTION], t1)
+
+                        yield x
+

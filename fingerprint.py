@@ -58,9 +58,9 @@ class Fingerprint:
         self.time = None
 
     def set_data(self, freq, time, amps):
-        self.amps = amps
         self.freq = freq
         self.time = time
+        self.amps = amps
 
     def get_unfiltered_data(self):
         peaks = zip(self.freq, self.time, self.amps)
@@ -122,8 +122,8 @@ class Fingerprint:
         print('FINGERPRINTER DETAILS ***********')
         print('Number of peaks: ', len(freq_idx))
         print('Number of time idx: ', len(time_idx))
-        print('Length of segment: ', round(len(arr2D[1]) / DEFAULT_FREQ * DEFAULT_WINDOW_SIZE * DEFAULT_OVERLAP_RATIO, 5),
-              'seconds')
+        print('Length of segment: ',
+              round(len(arr2D[1]) / DEFAULT_FREQ * DEFAULT_WINDOW_SIZE * DEFAULT_OVERLAP_RATIO, 5), 'seconds')
 
         if plot:
             print('Plotting!')

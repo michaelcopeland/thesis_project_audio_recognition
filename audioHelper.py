@@ -109,7 +109,7 @@ def retrieve_audio_data(filename, limit=None):
         channels   - the audio data of the song whether it is mono or stereo
     """
     try:
-        print('Audio helper: Fetching audio data')
+        print('Audio helper: Fetching audio data for ', filename)
         audio_data = AudioSegment.from_file(filename)
 
         if limit:

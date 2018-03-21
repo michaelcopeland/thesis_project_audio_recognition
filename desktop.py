@@ -3,7 +3,6 @@
 from os import walk
 import audioSimilarity
 import waveReader
-import matplotlib.pyplot as plt
 import numpy as np
 import fingerprintWorker as worker
 
@@ -18,48 +17,37 @@ def get_all_files(directory_path):
     #print(files)
     return files
 
-def get_all_waveforms(dir='test_data/', list_of_wavs=[]):
+def get_audio_from_dir(dir='test_data/', list_of_wavs=[]):
     files = get_all_files(dir)
 
     sim = audioSimilarity.AudioSimilarity()
 
     for f in files:
-        fs, data = waveReader.read_wave_file(dir+f)
+        fs, wave_data = waveReader.read_wave_file(dir+f)
         peaks = worker.retrieve_unfiltered_peaks(dir+f)
 
-        sim.add_audio_data(f, [fs, data, peaks])
+        f_series = [x[0] for x in peaks]
+        t_series = [x[1] for x in peaks]
+
+        refined_peaks = np.array([f_series, t_series])
+        sim.add_audio_data(f, [fs, wave_data, refined_peaks])
 
     res = sim.storedAudio
     return res
 
-dictionary_of_wavs = get_all_waveforms()
+data = get_audio_from_dir()
 
-s1 = dictionary_of_wavs['river1.wav'][2]
-s2 = dictionary_of_wavs['c1.wav'][2]
+wav1 = data['estring.wav'][1]
+wav2 = data['river2.wav'][1]
 
-wav1 = dictionary_of_wavs['river1.wav'][1]
-wav2 = dictionary_of_wavs['c1.wav'][1]
-print(wav1,'\n',wav2)
+sim.plot_waves(wav2, wav1)
 
-freq1 = [x[0] for x in s1]
-time1 = [x[1] for x in s1]
+peaks1 = data['estring.wav'][2]
+peaks2 = data['river2.wav'][2]
 
-freq2 = [x[0] for x in s2]
-time2 = [x[1] for x in s2]
-
-x1 = np.array([freq1, time1])
-x2 = np.array([freq2, time2])
-
-sim.plot_waves(wav1, wav2)
-#pears = sim.get_pearson_correlation(wav1, wav2)
-#corc  = sim.get_correlated_coefficients(freq1, freq2)
-xcor   = sim.get_xcorr(wav2, wav1)
-plt.xcorr(wav2, wav1)
-plt.grid(True)
-plt.show()
-
-
-#print(pears)
-#print(corc)
-print(xcor)
+sim.get_pearson_correlation(peaks1[0], peaks2[0])
+sim.get_correlated_coefficients(peaks1[0], peaks2[0])
+sim.get_xcorr_2d(peaks1, peaks2)
+sim.get_xcorr(peaks1[0], peaks2[0])
+sim.get_linear_regression(wav1, wav2)
 

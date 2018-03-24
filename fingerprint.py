@@ -49,6 +49,20 @@ PEAK_SORT = True
 # potentially higher collisions and misclassifications when identifying songs.
 FINGERPRINT_REDUCTION = 20
 
+# TODO: generate a grid example later on
+######################################################################
+# Time and Frequency intervals and tolerances for the grid-hash
+# The interval values refer to the grid step on the time and frequency axes
+# The tolerance values refer to the area within the grid where a peak must be
+# in order for it be hashed.
+# If the peak is outside this grid area it will be discarded
+
+TIME_INTERVAL = 200
+FREQ_INTERVAL = 100
+
+TIME_TOLERANCE = 75
+FREQ_TOLERANCE = 32.5
+
 
 class Fingerprint:
 
@@ -84,7 +98,7 @@ class Fingerprint:
         arr2D[arr2D == -np.inf] = 0
 
         # find local maxima
-        local_maxima = self.get_2D_peaks(arr2D, plot=True, min_amp=min_amp)
+        local_maxima = self.get_2D_peaks(arr2D, plot=False, min_amp=min_amp)
         local_maxima = np.array(local_maxima)
 
         # return hashes
@@ -106,7 +120,6 @@ class Fingerprint:
         # extract peaks
         amps = arr2D[detected_peaks]
         j, i = np.where(detected_peaks)  # time, frequency
-
 
         # filter peaks
         amps = amps.flatten()
@@ -144,15 +157,77 @@ class Fingerprint:
         # python 2 would cast to a list when using zip, py3 does not
         return list(zip(freq_idx, time_idx))
 
-    def _find_optimal_index(self, peaks):
+    def _localize_coord(self, f, t):
+        """
+        Find the point within the grid toward which a coordinate will hash.
+
+        Attributes:
+            f, t - tuple of frequency and time
+        Return:
+             - tuple of frequency and time
+             - 'invalid' if tuple is not within target zone
+        """
+        _relative_f_idx = f % FREQ_INTERVAL
+        _relative_t_idx = t % TIME_INTERVAL
+
+        # find position on the grid
+        if f < FREQ_INTERVAL:
+            lb_f = 0
+        else:
+            lb_f = f - _relative_f_idx
+        ub_f = lb_f + FREQ_INTERVAL
+
+        if t < TIME_INTERVAL:
+            lb_t = 0
+        else:
+            lb_t = t - _relative_t_idx
+        ub_t = lb_t + TIME_INTERVAL
+
+        # ensure time coordinates are within grid tolerance
+        valid_lt = t <= lb_t + TIME_TOLERANCE
+        valid_ut = t >= ub_t - TIME_TOLERANCE
+        # ensure frequency coordinates are within grid tolerance
+        valid_lf = f <= lb_f + FREQ_TOLERANCE
+        valid_uf = f >= ub_f - FREQ_TOLERANCE
+
+        # what coordinate do we return
+        if (valid_lt or valid_ut) and (valid_lf or valid_uf):
+            # time coordinate
+            if valid_lt and valid_ut:
+                t_res = ub_t
+            elif valid_lt:
+                t_res = lb_t
+            else:
+                t_res = ub_t
+
+            # frequency coordinate
+            if valid_lt and valid_uf:
+                f_res = ub_f
+            elif valid_lf:
+                f_res = lb_f
+            else:
+                f_res = ub_f
+
+            return f_res, t_res
+        return 'invalid'
+
+    def grid_filter_peaks(self, peaks):
         """
         Filters the peaks.
 
-        :param peaks: - a zip of frequency and time points
-        :return: a filtered list of frequency and time points
+        Attributes:
+            peaks - a zip of frequency and time points
+        Return:
+             a filtered list of frequency and time points
         """
+        for i in range(len(peaks)):
+            print(self._localize_coord(peaks[i][IDX_FREQ_I], peaks[i][IDX_TIME_J]))
+
+            # TODO: if invalid, delete from zip
 
     def generate_hashes(self, peaks, fan_value=DEFAULT_FAN_VALUE):
+        self.grid_filter_peaks(peaks)
+
         if PEAK_SORT:
             # sorting peaks by frequency
             sorted(peaks, key=itemgetter(0))
@@ -180,4 +255,3 @@ class Fingerprint:
                         x = (h.hexdigest()[0:FINGERPRINT_REDUCTION], t1)
 
                         yield x
-

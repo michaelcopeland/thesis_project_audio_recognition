@@ -54,3 +54,5 @@ def insert_wav_to_db(song_n):
         db.insert_fingerprint(h[0], song_name, h[1])
 
 # TODO: add match alignment
+
+fingerprint_worker('wavs/c1.wav')

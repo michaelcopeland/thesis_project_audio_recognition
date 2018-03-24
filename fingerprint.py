@@ -84,13 +84,13 @@ class Fingerprint:
         arr2D[arr2D == -np.inf] = 0
 
         # find local maxima
-        local_maxima = self.get_2D_peaks(arr2D, plot=False, min_amp=min_amp)
+        local_maxima = self.get_2D_peaks(arr2D, plot=True, min_amp=min_amp)
         local_maxima = np.array(local_maxima)
 
         # return hashes
         return self.generate_hashes(local_maxima, fan_value=fan_val)
 
-    def get_2D_peaks(self, arr2D, plot=False, min_amp=DEFAULT_MIN_AMP):
+    def get_2D_peaks(self, arr2D, plot=False, store_data=False, min_amp=DEFAULT_MIN_AMP):
         struct = generate_binary_structure(2, 1)
         neighborhood = iterate_structure(struct, PEAK_NEIGHBORHOOD_SIZE)
 
@@ -110,7 +110,11 @@ class Fingerprint:
 
         # filter peaks
         amps = amps.flatten()
-        self.set_data(i, j, amps)
+
+        # stores information in a dictionary // used by audio similarity
+        if store_data:
+            self.set_data(i, j, amps)
+
         peaks = zip(i, j, amps)  # freq, time, amp
 
         peaks_filtered = [x for x in peaks if x[2] > min_amp]  # only consider peaks above a specific amplitude
@@ -139,6 +143,14 @@ class Fingerprint:
 
         # python 2 would cast to a list when using zip, py3 does not
         return list(zip(freq_idx, time_idx))
+
+    def _find_optimal_index(self, peaks):
+        """
+        Filters the peaks.
+
+        :param peaks: - a zip of frequency and time points
+        :return: a filtered list of frequency and time points
+        """
 
     def generate_hashes(self, peaks, fan_value=DEFAULT_FAN_VALUE):
         if PEAK_SORT:

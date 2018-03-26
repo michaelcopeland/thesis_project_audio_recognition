@@ -98,7 +98,7 @@ class Fingerprint:
         arr2D[arr2D == -np.inf] = 0
 
         # find local maxima
-        local_maxima = self.get_2D_peaks(arr2D, plot=False, min_amp=min_amp)
+        local_maxima = self.get_2D_peaks(arr2D, plot=True, min_amp=min_amp)
         local_maxima = np.array(local_maxima)
 
         # return hashes
@@ -130,7 +130,9 @@ class Fingerprint:
 
         peaks = zip(i, j, amps)  # freq, time, amp
 
-        peaks_filtered = [x for x in peaks if x[2] > min_amp]  # only consider peaks above a specific amplitude
+        # only consider peaks above a specific amplitude
+        # TODO: remove this before minhash approach
+        peaks_filtered = [x for x in peaks if x[2] > min_amp]
 
         # get idx for freq and time
         freq_idx = [x[0] for x in peaks_filtered]
@@ -143,7 +145,7 @@ class Fingerprint:
               round(len(arr2D[1]) / DEFAULT_FREQ * DEFAULT_WINDOW_SIZE * DEFAULT_OVERLAP_RATIO, 5), 'seconds')
 
         if plot:
-            print('Plotting!')
+            print('Plotting spectrogram!')
             fig, ax = plt.subplots()
             ax.imshow(arr2D, cmap='gnuplot')
             ax.scatter(freq_idx, time_idx)
@@ -153,10 +155,12 @@ class Fingerprint:
             ax.set_aspect('auto', adjustable='box')
             plt.gca().invert_yaxis()
             plt.show()
+            plt.close()
 
-        plt.scatter(freq_idx, time_idx)
-        plt.grid(True)
-        plt.show()
+            print('Plotting peaks!')
+            plt.scatter(freq_idx, time_idx)
+            plt.grid(True)
+            plt.show()
         # python 2 would cast to a list when using zip, py3 does not
         return list(zip(freq_idx, time_idx))
 
@@ -214,7 +218,7 @@ class Fingerprint:
             return f_res, t_res
         return 'invalid', 'invalid'
 
-    def grid_filter_peaks(self, peaks):
+    def grid_filter_peaks(self, peaks, plot=False):
         """
         Filters the peaks.
 
@@ -231,18 +235,26 @@ class Fingerprint:
             if type(f) and type(t) is not str:
                 freq_coords.append(f)
                 time_coords.append(t)
-        print('len={} {}'.format(len(freq_coords), len(time_coords)))
-        plt.rc('grid', linestyle='-', color='black')
-        plt.scatter(freq_coords, time_coords)
-        plt.grid(True)
-        plt.show()
+        print('Length of peak lists={} -freq {} -time'.format(len(freq_coords), len(time_coords)))
+
+        if plot:
+            print('Plotting grid!')
+            print('\nTime interval= {}\nTime tolerance= {}\nFreq interval= {}\nFreq tolerance= {}'.format(
+                TIME_INTERVAL,
+                TIME_TOLERANCE,
+                FREQ_INTERVAL,
+                FREQ_TOLERANCE))
+
+            plt.rc('grid', linestyle='-', color='black')
+            plt.scatter(freq_coords, time_coords)
+            plt.grid(True)
+            plt.show()
         # print('freq coords: {}\ntime coords: {}'.format(freq_coords, time_coords))
 
             # TODO: if invalid, delete from zip
 
     def generate_hashes(self, peaks, fan_value=DEFAULT_FAN_VALUE):
-        self.grid_filter_peaks(peaks)
-
+        #self.grid_filter_peaks(peaks)
         if PEAK_SORT:
             # sorting peaks by frequency
             sorted(peaks, key=itemgetter(0))

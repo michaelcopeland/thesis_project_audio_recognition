@@ -15,6 +15,7 @@ SONGS_FIELD_SONG_ID = 'song_id'
 SONGS_FIELD_SONG_NAME = 'song_name'
 SONGS_FIELD_FINGERPRINTED = 'is_fingerprinted'
 
+
 def connect():
     db = mysql.connect(
         host='127.0.0.1',
@@ -25,12 +26,16 @@ def connect():
     print('Connected to database!')
     return db
 
+
 def close_database():
     connection.close()
     print('Connection closed.')
 
+
 connection = connect()
 cur = connection.cursor()
+
+##### CREATE STATEMENTS #####
 
 CREATE_FINGERPRINTS_TABLE = """
 CREATE TABLE IF NOT EXISTS {} (
@@ -40,7 +45,7 @@ CREATE TABLE IF NOT EXISTS {} (
 {}     int unsigned NOT NULL,
 INDEX({}),
 FOREIGN KEY ({}) REFERENCES {}({}) ON DELETE CASCADE 
-);""".format(FINGERPRINTS_TABLE, FINGERPRINT_FIELD_ID,FINGERPRINT_FIELD_HASHKEY,
+);""".format(FINGERPRINTS_TABLE, FINGERPRINT_FIELD_ID, FINGERPRINT_FIELD_HASHKEY,
              FINGERPRINT_FIELD_SONGNAME, FINGERPRINT_FIELD_TIMEOFFSET,
              FINGERPRINT_FIELD_HASHKEY,
              FINGERPRINT_FIELD_SONGNAME, SONGS_TABLE, SONGS_FIELD_SONG_NAME)
@@ -56,8 +61,12 @@ UNIQUE KEY {}({})
            SONGS_FIELD_SONG_NAME, SONGS_FIELD_FINGERPRINTED,
            SONGS_FIELD_SONG_NAME, SONGS_FIELD_SONG_NAME)
 
+##### BOBBY STATEMENTS #####
+
 DROP_FINGERPRINTS = 'DROP TABLE IF EXISTS {}'.format(FINGERPRINTS_TABLE)
-DROP_SONGS        = 'DROP TABLE IF EXISTS {}'.format(SONGS_TABLE)
+DROP_SONGS = 'DROP TABLE IF EXISTS {}'.format(SONGS_TABLE)
+
+##### INSERT STATEMENTS #####
 
 INSERT_SONG = 'INSERT INTO {}({}, {}) VALUES (\'%s\', \'%s\');'.format(SONGS_TABLE,
                                                                        SONGS_FIELD_SONG_NAME,
@@ -67,6 +76,7 @@ INSERT_FINGERPRINT = 'INSERT INTO {}({},{},{}) VALUES (\'%s\', \'%s\', \'%s\');'
                                                                                         FINGERPRINT_FIELD_HASHKEY,
                                                                                         FINGERPRINT_FIELD_SONGNAME,
                                                                                         FINGERPRINT_FIELD_TIMEOFFSET)
+###### SELECT STATEMENTS #####
 
 SELECT = 'SELECT {}, {} FROM {} WHERE {} = \'%s\';'.format(FINGERPRINT_FIELD_SONGNAME,
                                                            FINGERPRINT_FIELD_TIMEOFFSET,
@@ -84,6 +94,13 @@ SELECT_MULTIPLE = 'SELECT {}, {}, {} FROM {} WHERE {} IN (%s)'.format(FINGERPRIN
                                                                       FINGERPRINTS_TABLE,
                                                                       FINGERPRINT_FIELD_HASHKEY)
 
+SELECT_SONG_NAME = 'SELECT {}, {}, {} FROM {} WHERE {} IN (%s)'.format(SONGS_FIELD_SONG_ID,
+                                                                       SONGS_FIELD_SONG_NAME,
+                                                                       SONGS_FIELD_FINGERPRINTED,
+                                                                       SONGS_TABLE,
+                                                                       SONGS_FIELD_SONG_NAME)
+
+
 def drop_all_tables():
     try:
         cur.execute(DROP_FINGERPRINTS)
@@ -92,6 +109,7 @@ def drop_all_tables():
         print('Database cleared!')
     except:
         connection.rollback()
+
 
 def setup():
     try:
@@ -104,6 +122,7 @@ def setup():
     except:
         connection.rollback()
 
+
 def insert_song(song_name='', fgp=0):
     insert_query = INSERT_SONG % (song_name, fgp)
     insert_query.encode('utf-8')
@@ -114,6 +133,7 @@ def insert_song(song_name='', fgp=0):
         print('Song inserted!')
     except:
         connection.rollback()
+
 
 def insert_fingerprint(hashkey, song_name, time_offset):
     """
@@ -127,9 +147,28 @@ def insert_fingerprint(hashkey, song_name, time_offset):
     try:
         cur.execute(insert_query)
         connection.commit()
-        #print('Fingerprint inserted!')
+        # print('Fingerprint inserted!')
     except:
         connection.rollback()
+
+
+def get_song_by_name(song_name):
+    select_query = SELECT_SONG_NAME % song_name
+
+    song_id = 0
+    song_name = ''
+    is_fingerprinted = 0
+
+    try:
+        song_id, song_name, is_fingerprinted = cur.execute(select_query)
+        connection.commit()
+    except:
+        print('Error in get_song_by_name')
+        connection.rollback()
+
+    if song_id is not None and song_name is not '':
+        return True, song_id, song_name, is_fingerprinted
+    return False, song_id, song_name, is_fingerprinted
 
 def query_all_fingerprints():
     """
@@ -147,6 +186,7 @@ def query_all_fingerprints():
         print('Error retrieving all fingerprints')
         connection.rollback()
 
+
 def query(hashkey=None):
     """
     Return all tuples associated with hash.
@@ -162,8 +202,9 @@ def query(hashkey=None):
     cur.execute(select_query)
     connection.commit()
     for s_name, offset in cur:
-        #print(s_name, offset)
+        # print(s_name, offset)
         yield (s_name, offset)
+
 
 def get_matches(list_of_hashes):
     print('Get matches!')
@@ -182,5 +223,5 @@ def get_matches(list_of_hashes):
     cur.execute(query, values)
 
     for hash_k, song_name, time_offset in cur:
-        #print('result: ', hash_k, song_name, time_offset)
+        # print('result: ', hash_k, song_name, time_offset)
         yield (song_name, time_offset - map[hash_k])

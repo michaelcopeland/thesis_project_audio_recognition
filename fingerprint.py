@@ -57,11 +57,11 @@ FINGERPRINT_REDUCTION = 20
 # in order for it be hashed.
 # If the peak is outside this grid area it will be discarded
 
-TIME_INTERVAL = 200
-FREQ_INTERVAL = 100
+TIME_INTERVAL = 50
+FREQ_INTERVAL = 50
 
-TIME_TOLERANCE = 75
-FREQ_TOLERANCE = 32.5
+TIME_TOLERANCE = 20
+FREQ_TOLERANCE = 20
 
 
 class Fingerprint:
@@ -154,6 +154,9 @@ class Fingerprint:
             plt.gca().invert_yaxis()
             plt.show()
 
+        plt.scatter(freq_idx, time_idx)
+        plt.grid(True)
+        plt.show()
         # python 2 would cast to a list when using zip, py3 does not
         return list(zip(freq_idx, time_idx))
 
@@ -209,7 +212,7 @@ class Fingerprint:
                 f_res = ub_f
 
             return f_res, t_res
-        return 'invalid'
+        return 'invalid', 'invalid'
 
     def grid_filter_peaks(self, peaks):
         """
@@ -220,8 +223,20 @@ class Fingerprint:
         Return:
              a filtered list of frequency and time points
         """
+        freq_coords = []
+        time_coords = []
+
         for i in range(len(peaks)):
-            print(self._localize_coord(peaks[i][IDX_FREQ_I], peaks[i][IDX_TIME_J]))
+            f, t = self._localize_coord(peaks[i][IDX_FREQ_I], peaks[i][IDX_TIME_J])
+            if type(f) and type(t) is not str:
+                freq_coords.append(f)
+                time_coords.append(t)
+        print('len={} {}'.format(len(freq_coords), len(time_coords)))
+        plt.rc('grid', linestyle='-', color='black')
+        plt.scatter(freq_coords, time_coords)
+        plt.grid(True)
+        plt.show()
+        # print('freq coords: {}\ntime coords: {}'.format(freq_coords, time_coords))
 
             # TODO: if invalid, delete from zip
 

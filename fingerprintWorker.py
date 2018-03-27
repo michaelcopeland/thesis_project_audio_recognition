@@ -122,7 +122,7 @@ def files_in_dir(dir_path):
     #directory, f_name = tup
     #print('{}\n{}'.format())
 
-song_name, list_hash = fingerprint_worker('wavs/estring.wav', limit=None)
+song_name, list_hash = fingerprint_worker('wavs/01.wav', limit=4)
 
 print('Song name: ', song_name)
 print('Number of generated hashes: ', len(list_hash))
@@ -133,5 +133,5 @@ x = db.get_matches(list_hash)
 counter = 0
 for i in x:
     counter += 1
-    print(i)
+    #print(i)
 print('Number of matches=', counter)

@@ -8,6 +8,7 @@ import os
 import time
 
 fgp_api = Fingerprint()
+invalid_ext = ['pdf', 'txt', 'jpg', 'wav.alt', 'csv', 'xlsx', 'alt']
 
 def retrieve_unfiltered_peaks(filename, limit=None):
     print('Retrieving peaks for ', filename)
@@ -108,30 +109,38 @@ def files_in_dir(dir_path):
 
     for (dirpath, dirname, filenames) in os.walk(dir_path):
         files.append([dirpath, filenames])
-    # print(files)
     return files
 
+#### experiment 1 ####
+# add all wavs to db
 
-# f = files_in_dir('C:\\Users\\Vlad\Documents\\thesis\\audioExtraction\\wavs')
-# track_counter = 0
-# for tup in f:
-#     track_counter += len(tup[1])
-#     print('{}\n{}'.format(tup[0], tup[1]))
-# print('Number of wavs: ', track_counter)
+f = files_in_dir('C:\\Users\\Vlad\Documents\\thesis\\audioExtraction\\wavs')
+reset_database()
+
+track_counter = 0
+
+# go through each directory
+for tup in f:
+    current_dir = tup[0]
+    file_in_cd = tup[1]
+
+    # go through each file in the directory
+    for file in file_in_cd:
+        path = current_dir + '\\' + file
+
+        # avoid invalid extensions
+        ext = file.split(".")[-1].lower()
+        if ext in invalid_ext:
+            continue
+        db.insert_song(file, 1)
+        _, list_hashes = fingerprint_worker(path)
+        for h in list_hashes:
+            db.insert_fingerprint(h[0], file, h[1])
+
+print('Number of wavs: ', track_counter)
 
     #directory, f_name = tup
     #print('{}\n{}'.format())
 
-song_name, list_hash = fingerprint_worker('wavs/01.wav', limit=4)
+# song_name, list_hash = fingerprint_worker('wavs/river1.wav', limit=4)
 
-print('Song name: ', song_name)
-print('Number of generated hashes: ', len(list_hash))
-
-db.connect()
-
-x = db.get_matches(list_hash)
-counter = 0
-for i in x:
-    counter += 1
-    #print(i)
-print('Number of matches=', counter)

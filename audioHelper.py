@@ -1,7 +1,7 @@
 import wave
 import numpy as np
 import pyaudio
-from pydub import AudioSegment
+#from pydub import AudioSegment
 import soundfile as sf
 import time
 import sys
@@ -116,11 +116,7 @@ def retrieve_audio(wave_file, limit=None):
         num_channels = current_wav.channels
 
         audio_data, frame_rate = sf.read(wave_file, dtype=np.int16)
-        #size = len(audio_data)
 
-        #print('length of audio data=', size, 'type=', type(audio_data))
-
-        # TODO: implement a starting and end point in case I need to extract a segment
         if limit:
             frame_count = limit * frame_rate
 
@@ -129,12 +125,12 @@ def retrieve_audio(wave_file, limit=None):
             elif num_channels == 2:
                 audio_data = audio_data[:frame_count]
 
-        #print('length of audio data=', len(audio_data[0]), 'type=', type(audio_data))
         audio_data = audio_data.T
         audio_data = np.reshape(audio_data, (1, len(audio_data)))
 
+        current_wav.close()
     except:
-        print('audioHelper Error: could not retrieve audio data')
+        print('audioHelper Warning: audio with {} channels has issues'.format(num_channels))
 
 
     if num_channels == 1:
@@ -144,70 +140,70 @@ def retrieve_audio(wave_file, limit=None):
         return num_channels, frame_rate, list(audio_data)
 
 
-def retrieve_audio_data(filename, limit=None):
-    """DEPRECATED - see retrieve_audio
-
-    Retrieves audio information from an audio file.
-    In case of a 24-bit file it uses AudioHelper(with wave)
-
-    Returns:
-        frame_rate - rate at which audio is being sampled in Hz
-        channels   - the audio data of the song whether it is mono or stereo
-    """
-    try:
-        print('Audio helper: Fetching audio data for ', filename)
-        audio_data = AudioSegment.from_file(filename)
-
-        if limit:
-            print('limit - old')
-            # the limit refers to a segment of audio, by default we want to retrieve the entire audio data
-            audio_data = audio_data[:(limit * 1000)]
-            #print('len={} type={}'.format(len(audio_data), type(audio_data)))
-
-        # raw data is pydub's representation of the raw audio bytestring
-        data = np.fromstring(audio_data.raw_data, dtype=np.int16)
-        #print('data: \n', data, '\nlength of data:', len(data))
-
-        channels = []
-
-        # accounting for mono / stereo
-        for chn in range(audio_data.channels):
-            channels.append(data[chn::audio_data.channels])
-
-        frame_rate = audio_data.frame_rate
-        if AudioSegment.converter == 'other':
-            raise Exception('hack')
-
-    # this does not work as intended
-    except Exception:#audioop.error:
-        print('Audio is 24-bit\nUsing wave')
-        helper = AudioHelper(filename)
-        frame_rate, sample_width, audio_data = helper.get_wav_audio_data(filename)
-
-        audio_data = np.array(audio_data, dtype=np.int16)
-        audio_data = audio_data.T
-        audio_data = audio_data.astype(np.int16)
-        print('shape', audio_data.shape)
-
-        channels = []
-        for chn in audio_data:
-            channels.append(chn)
-    return frame_rate, channels
+# def retrieve_audio_data(filename, limit=None):
+#     """DEPRECATED - see retrieve_audio
+#
+#     Retrieves audio information from an audio file.
+#     In case of a 24-bit file it uses AudioHelper(with wave)
+#
+#     Returns:
+#         frame_rate - rate at which audio is being sampled in Hz
+#         channels   - the audio data of the song whether it is mono or stereo
+#     """
+#     try:
+#         print('Audio helper: Fetching audio data for ', filename)
+#         audio_data = AudioSegment.from_file(filename)
+#
+#         if limit:
+#             print('limit - old')
+#             # the limit refers to a segment of audio, by default we want to retrieve the entire audio data
+#             audio_data = audio_data[:(limit * 1000)]
+#             #print('len={} type={}'.format(len(audio_data), type(audio_data)))
+#
+#         # raw data is pydub's representation of the raw audio bytestring
+#         data = np.fromstring(audio_data.raw_data, dtype=np.int16)
+#         #print('data: \n', data, '\nlength of data:', len(data))
+#
+#         channels = []
+#
+#         # accounting for mono / stereo
+#         for chn in range(audio_data.channels):
+#             channels.append(data[chn::audio_data.channels])
+#
+#         frame_rate = audio_data.frame_rate
+#         if AudioSegment.converter == 'other':
+#             raise Exception('hack')
+#
+#     # this does not work as intended
+#     except Exception:#audioop.error:
+#         print('Audio is 24-bit\nUsing wave')
+#         helper = AudioHelper(filename)
+#         frame_rate, sample_width, audio_data = helper.get_wav_audio_data(filename)
+#
+#         audio_data = np.array(audio_data, dtype=np.int16)
+#         audio_data = audio_data.T
+#         audio_data = audio_data.astype(np.int16)
+#         print('shape', audio_data.shape)
+#
+#         channels = []
+#         for chn in audio_data:
+#             channels.append(chn)
+#     return frame_rate, channels
 
 # testing main
 if __name__ == '__main__':
     file = sys.argv[1]
     nc, f, data = retrieve_audio(file, limit=2)
-    fs, datas = retrieve_audio_data(file, limit=2)
+    #fs, datas = retrieve_audio_data(file, limit=2)
 
     print('f_rate=', f)
 
-    print(len(data), ' ', len(datas))
+    #print(len(data), ' ', len(datas))
     print(np.shape(data))
-    print(np.shape(datas))
+    #print(np.shape(datas))
 
     print(data)
-    print(datas)
+    #print(datas)
 
 
 

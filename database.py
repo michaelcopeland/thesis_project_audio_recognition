@@ -66,6 +66,12 @@ UNIQUE KEY {}({})
 DROP_FINGERPRINTS = 'DROP TABLE IF EXISTS {}'.format(FINGERPRINTS_TABLE)
 DROP_SONGS = 'DROP TABLE IF EXISTS {}'.format(SONGS_TABLE)
 
+DELETE_FINGERPRINTS = 'DELETE FROM {} WHERE {} IN (%s)'.format(FINGERPRINTS_TABLE,
+                                                               FINGERPRINT_FIELD_SONGNAME)
+
+DELETE_SONGS = 'DELETE FROM {} WHERE {} IN (%s)'.format(SONGS_TABLE,
+                                                        SONGS_FIELD_SONG_NAME)
+
 ##### INSERT STATEMENTS #####
 
 INSERT_SONG = 'INSERT INTO {}({}, {}) VALUES (\'%s\', \'%s\');'.format(SONGS_TABLE,
@@ -77,6 +83,7 @@ INSERT_FINGERPRINT = 'INSERT INTO {}({},{},{}) VALUES (\'%s\', \'%s\', \'%s\');'
                                                                                         FINGERPRINT_FIELD_SONGNAME,
                                                                                         FINGERPRINT_FIELD_TIMEOFFSET)
 ###### SELECT STATEMENTS #####
+
 
 SELECT = 'SELECT {}, {} FROM {} WHERE {} = \'%s\';'.format(FINGERPRINT_FIELD_SONGNAME,
                                                            FINGERPRINT_FIELD_TIMEOFFSET,
@@ -99,6 +106,15 @@ SELECT_SONG_NAME = 'SELECT {}, {}, {} FROM {} WHERE {} IN (%s)'.format(SONGS_FIE
                                                                        SONGS_FIELD_FINGERPRINTED,
                                                                        SONGS_TABLE,
                                                                        SONGS_FIELD_SONG_NAME)
+
+SELECT_SONG_BY_FGP = 'SELECT {} FROM {} WHERE {} = %s'.format(SONGS_FIELD_SONG_NAME,
+                                                              SONGS_TABLE,
+                                                              SONGS_FIELD_FINGERPRINTED)
+
+##### UPDATE STATEMENTS #####
+UPDATE_IS_FINGERPRINTED = 'UPDATE {} SET {}=(%s) WHERE {} IN (%s)'.format(SONGS_TABLE,
+                                                                          SONGS_FIELD_FINGERPRINTED,
+                                                                          SONGS_FIELD_SONG_NAME)
 
 
 def drop_all_tables():
@@ -150,6 +166,91 @@ def insert_fingerprint(hashkey, song_name, time_offset):
         # print('Fingerprint inserted!')
     except:
         connection.rollback()
+
+def delete_fgp_by_song(list_song_n):
+    """Deletes fingerprints for each song in the parameter list of song
+
+    Attribute:
+        list_song_n - list of songs for which to delete fingerprints
+    """
+    songs = ', '.join(str('\'' + x + '\'') for x in list_song_n)
+
+    delete_statement = DELETE_FINGERPRINTS % songs
+
+    if songs is not '':
+        try:
+            print('Deleting fingerprint for:\n {}'.format(songs))
+            cur.execute(delete_statement)
+            connection.commit()
+        except:
+            print('Could not delete fingerprints')
+            return
+        print('Deletion successful!')
+
+    else:
+        print('Deletion failed: no songs in list')
+
+def delete_songs(list_song_n):
+    songs = ', '.join(str('\'' + x + '\'') for x in list_song_n)
+
+    delete_statement = DELETE_SONGS % songs
+
+    if songs is not '':
+        try:
+            print('Deleting songs:\n {}'.format(songs))
+            cur.execute(delete_statement)
+            connection.commit()
+        except:
+            print('Could not delete songs')
+            return
+        print('Deletion successful!')
+
+
+def update_is_fingerprinted(list_song_n, is_fingerprinted):
+    """Set the is_fingerprinted filed of a list of song
+
+    Attributes:
+        list_song_n       - a list of song names
+        is_fingerprinted  - 0 not fingerprinted, 1 fingerprinted
+    """
+    songs = ', '.join(str('\'' + x + '\'') for x in list_song_n)
+
+    update_statement = UPDATE_IS_FINGERPRINTED % (is_fingerprinted, songs)
+
+    if songs is not '':
+        try:
+            print('Updating songs to is_fingerprinted={}'.format(SONGS_FIELD_FINGERPRINTED))
+            cur.execute(update_statement)
+            connection.commit()
+        except:
+            print('Update failed: is_fingerprinted status could not be written')
+            return
+        print('Success!')
+    else:
+        print('Update failed: No songs in list')
+
+
+def get_songs_by_fgp_status(is_fgp=0):
+    """Retrieves song names based on the is_fingerprinted value
+
+    Attributes:
+        is_fgp - 0 not fingerprinted, 1 is fingerprinted
+
+    Return:
+        res_list - a list of song names
+    """
+
+    select_query = SELECT_SONG_BY_FGP % is_fgp
+
+    try:
+        print('Retrieving songs with is_fingeprinted={}'.format(is_fgp))
+        cur.execute(select_query)
+        connection.commit()
+
+        yield cur.fetchall()
+        print('Success!')
+    except:
+        print('Songs could not be retrieved')
 
 
 def get_song_by_name(song_name):
@@ -217,10 +318,10 @@ def get_matches(list_of_hashes):
     values = list(values)
     num_query = len(values)
 
-    query = SELECT_MULTIPLE
-    query = query % ', '.join(['%s'] * num_query)
+    query_matches = SELECT_MULTIPLE
+    query_matches = query_matches % ', '.join(['%s'] * num_query)
 
-    cur.execute(query, values)
+    cur.execute(query_matches, values)
 
     for hash_k, song_name, time_offset in cur:
         # print('result: ', hash_k, song_name, time_offset)

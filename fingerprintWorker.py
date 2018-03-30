@@ -112,35 +112,76 @@ def files_in_dir(dir_path):
     return files
 
 #### experiment 1 ####
-# add all wavs to db
+def fingerprint_songs(reset_db=False):
+    f = files_in_dir('C:\\Users\\Vlad\Documents\\thesis\\audioExtraction\\wavs')
 
-f = files_in_dir('C:\\Users\\Vlad\Documents\\thesis\\audioExtraction\\wavs')
-reset_database()
+    if reset_db:
+        reset_database()
 
-track_counter = 0
+    # get fingerprinted files
+    already_fingerprinted = get_wavs_by_fgp(1)
 
-# go through each directory
-for tup in f:
-    current_dir = tup[0]
-    file_in_cd = tup[1]
+    track_counter = 0
+    # go through each directory
+    for tup in f:
+        current_dir = tup[0]
+        file_in_cd = tup[1]
 
-    # go through each file in the directory
-    for file in file_in_cd:
-        path = current_dir + '\\' + file
+        # go through each file in the directory
+        for file in file_in_cd:
+            # don't re-fingerprint files
+            if file in already_fingerprinted:
+                continue
 
-        # avoid invalid extensions
-        ext = file.split(".")[-1].lower()
-        if ext in invalid_ext:
-            continue
-        db.insert_song(file, 1)
-        _, list_hashes = fingerprint_worker(path)
-        for h in list_hashes:
-            db.insert_fingerprint(h[0], file, h[1])
+            path = current_dir + '\\' + file
 
-print('Number of wavs: ', track_counter)
+            # avoid invalid extensions
+            ext = file.split(".")[-1].lower()
+            if ext in invalid_ext:
+                continue
+            # insert song
+            db.insert_song(file, 1)
 
-    #directory, f_name = tup
-    #print('{}\n{}'.format())
+            # generate and insert hashes
+            _, list_hashes = fingerprint_worker(path)
+            for h in list_hashes:
+                db.insert_fingerprint(h[0], file, h[1])
 
-# song_name, list_hash = fingerprint_worker('wavs/river1.wav', limit=4)
+    print('Number of wavs: ', track_counter)
+
+
+# TODO: find a more elegant solution ffs
+def get_wavs_by_fgp(is_fgp=0):
+    res = list(db.get_songs_by_fgp_status(is_fgp))
+
+    form = str(res)
+    form = form.replace('(', '')
+    form = form.replace('),', '')
+    form = form.replace(',))', '')
+
+    form = form.replace('\'', '')
+
+    form = form.replace('[', '')
+    form = form.replace(']', '')
+
+    li = form.split(',')
+
+    clean_li = []
+    for elem in li:
+        elem = elem.strip()
+        clean_li.append(elem)
+
+    #print(clean_li)
+    return clean_li
+
+def clean_not_fgp():
+    # remove fingerprints + songs marked as not fingerprinted
+    #not_fingerprinted = get_wavs_by_fgp(0)
+    last_fingerprinted = ['FOUNTAIN Medium, Invigorating Network of Dribbles, Close.wav']
+    db.delete_fgp_by_song(last_fingerprinted)
+    db.delete_songs(last_fingerprinted)
+
+
+#clean_not_fgp()
+fingerprint_songs(reset_db=True)
 

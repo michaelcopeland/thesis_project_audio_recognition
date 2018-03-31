@@ -139,9 +139,9 @@ class Fingerprint:
         time_idx = [x[1] for x in peaks_filtered]
         # frequency = [x[2] for x in peaks_filtered]
         print('FINGERPRINTER DETAILS ***********')
-        print('Number of peaks: ', len(freq_idx))
+        print('Number of peak idx: ', len(freq_idx))
         print('Number of time idx: ', len(time_idx))
-        print('Length of segment: ',
+        print('Length of segment:',
               round(len(arr2D[1]) / DEFAULT_FREQ * DEFAULT_WINDOW_SIZE * DEFAULT_OVERLAP_RATIO, 5), 'seconds')
 
         if plot:

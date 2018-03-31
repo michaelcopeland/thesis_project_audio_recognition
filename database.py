@@ -1,7 +1,6 @@
 # Based on Will Drevo's DejaVu
 
 import MySQLdb as mysql
-from itertools import zip_longest
 
 FINGERPRINTS_TABLE = 'fingerprints'
 SONGS_TABLE = 'songs'
@@ -19,6 +18,7 @@ SONGS_FIELD_FINGERPRINTED = 'is_fingerprinted'
 def connect():
     db = mysql.connect(
         host='127.0.0.1',
+        port=3306,
         user='root',
         passwd='iamfuzzy222',
         db='audioExtraction'
@@ -31,9 +31,6 @@ def close_database():
     connection.close()
     print('Connection closed.')
 
-
-connection = connect()
-cur = connection.cursor()
 
 ##### CREATE STATEMENTS #####
 
@@ -146,7 +143,7 @@ def insert_song(song_name='', fgp=0):
     try:
         cur.execute(insert_query)
         connection.commit()
-        print('Song inserted!')
+        print('Inserted song: {}'.format(song_name))
     except:
         connection.rollback()
 
@@ -183,6 +180,7 @@ def delete_fgp_by_song(list_song_n):
             cur.execute(delete_statement)
             connection.commit()
         except:
+            connection.rollback()
             print('Could not delete fingerprints')
             return
         print('Deletion successful!')
@@ -201,6 +199,7 @@ def delete_songs(list_song_n):
             cur.execute(delete_statement)
             connection.commit()
         except:
+            connection.rollback()
             print('Could not delete songs')
             return
         print('Deletion successful!')
@@ -223,6 +222,7 @@ def update_is_fingerprinted(list_song_n, is_fingerprinted):
             cur.execute(update_statement)
             connection.commit()
         except:
+            connection.rollback()
             print('Update failed: is_fingerprinted status could not be written')
             return
         print('Success!')
@@ -250,6 +250,7 @@ def get_songs_by_fgp_status(is_fgp=0):
         yield cur.fetchall()
         print('Success!')
     except:
+        connection.rollback()
         print('Songs could not be retrieved')
 
 
@@ -326,3 +327,7 @@ def get_matches(list_of_hashes):
     for hash_k, song_name, time_offset in cur:
         # print('result: ', hash_k, song_name, time_offset)
         yield (song_name, time_offset - map[hash_k])
+
+# REMEMBER TO CREATE THE DATABASE WITH MYSQL!!!
+connection = connect()
+cur = connection.cursor()

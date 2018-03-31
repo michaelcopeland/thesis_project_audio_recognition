@@ -111,6 +111,10 @@ def retrieve_audio(wave_file, limit=None):
         frame rate   - the rate of sample
         data         - numpy array of audio data
     """
+    num_channels = 0
+    frame_rate = 0
+    audio_data = None
+
     try:
         current_wav = sf.SoundFile(wave_file)
         num_channels = current_wav.channels
@@ -130,15 +134,13 @@ def retrieve_audio(wave_file, limit=None):
 
         current_wav.close()
     except:
-        print('audioHelper Warning: audio with {} channels has issues'.format(num_channels))
-
+        print('audioHelper Warning: audio with {} channels'.format(num_channels))
 
     if num_channels == 1:
         return num_channels, frame_rate, audio_data
 
     elif num_channels == 2:
         return num_channels, frame_rate, list(audio_data)
-
 
 # def retrieve_audio_data(filename, limit=None):
 #     """DEPRECATED - see retrieve_audio
@@ -192,9 +194,10 @@ def retrieve_audio(wave_file, limit=None):
 
 # testing main
 if __name__ == '__main__':
-    file = sys.argv[1]
-    nc, f, data = retrieve_audio(file, limit=2)
+    file = 'C:\\Users\\Vlad\Documents\\thesis\\audioExtraction\\wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Articulated Sounds - Dice\\DICE on Neoprene, Throw and Roll, Mini, 1 One Die, v2.wav'
+    nc, f, data = retrieve_audio(file, limit=3)
     #fs, datas = retrieve_audio_data(file, limit=2)
+    print(nc, ' ', f)
 
     print('f_rate=', f)
 

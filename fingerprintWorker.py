@@ -45,7 +45,7 @@ def reset_database():
     db.setup()
 
 def insert_wav_to_db(song_n):
-    db.connect()
+    #db.connect()
     song_name, list_hash = fingerprint_worker(song_n, limit=None)
 
     print('Song name: ', song_name)
@@ -112,16 +112,19 @@ def files_in_dir(dir_path):
     return files
 
 #### experiment 1 ####
-def fingerprint_songs(reset_db=False):
+def fingerprint_songs(reset_db=False, song_limit=None):
     f = files_in_dir('C:\\Users\\Vlad\Documents\\thesis\\audioExtraction\\wavs')
 
     if reset_db:
         reset_database()
 
     # get fingerprinted files
-    already_fingerprinted = get_wavs_by_fgp(1)
+    number_fgp, already_fingerprinted = get_wavs_by_fgp(1)
+    #print(already_fingerprinted)
+    #print('Number of fingerprints=', number_fgp)
 
-    track_counter = 0
+    song_counter = 0
+
     # go through each directory
     for tup in f:
         current_dir = tup[0]
@@ -129,9 +132,16 @@ def fingerprint_songs(reset_db=False):
 
         # go through each file in the directory
         for file in file_in_cd:
+
             # don't re-fingerprint files
             if file in already_fingerprinted:
+                print('Skipping: {}'.format(file))
                 continue
+
+            if song_counter == song_limit:
+                print('Added {} tracks to database.'.format(song_counter))
+                db.connection.close()
+                return
 
             path = current_dir + '\\' + file
 
@@ -139,15 +149,17 @@ def fingerprint_songs(reset_db=False):
             ext = file.split(".")[-1].lower()
             if ext in invalid_ext:
                 continue
+
             # insert song
             db.insert_song(file, 1)
+            song_counter += 1
 
             # generate and insert hashes
             _, list_hashes = fingerprint_worker(path)
             for h in list_hashes:
                 db.insert_fingerprint(h[0], file, h[1])
 
-    print('Number of wavs: ', track_counter)
+    print('Number of wavs: ', song_counter)
 
 
 # TODO: find a more elegant solution ffs
@@ -171,17 +183,22 @@ def get_wavs_by_fgp(is_fgp=0):
         elem = elem.strip()
         clean_li.append(elem)
 
-    #print(clean_li)
-    return clean_li
+    # SQL quirk, empty cursors have a semi colon
+    if clean_li[0] == ')':
+        clean_li = []
+
+    number_of_tracks = len(clean_li)
+    return number_of_tracks, clean_li
 
 def clean_not_fgp():
+    # TODO: fix issue where new songs are not inserted
     # remove fingerprints + songs marked as not fingerprinted
     #not_fingerprinted = get_wavs_by_fgp(0)
-    last_fingerprinted = ['FOUNTAIN Medium, Invigorating Network of Dribbles, Close.wav']
+    last_fingerprinted = ['DAYTIME, JUNCTION WITH BUSY TRAFFIC, CARS, MOTORBIKES, TRUCKS, HORNING, PEOPLE ON THE STREET, BIG CITY LIFE, BOMBAY, MUMBAI_INCREDIBLE_INDIA_VOL_II_14.WAV']
     db.delete_fgp_by_song(last_fingerprinted)
     db.delete_songs(last_fingerprinted)
 
 
 #clean_not_fgp()
-fingerprint_songs(reset_db=True)
+fingerprint_songs(reset_db=True, song_limit=10)
 

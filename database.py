@@ -98,11 +98,11 @@ SELECT_MULTIPLE = 'SELECT {}, {}, {} FROM {} WHERE {} IN (%s)'.format(FINGERPRIN
                                                                       FINGERPRINTS_TABLE,
                                                                       FINGERPRINT_FIELD_HASHKEY)
 
-SELECT_SONG_NAME = 'SELECT {}, {}, {} FROM {} WHERE {} IN (%s)'.format(SONGS_FIELD_SONG_ID,
-                                                                       SONGS_FIELD_SONG_NAME,
-                                                                       SONGS_FIELD_FINGERPRINTED,
-                                                                       SONGS_TABLE,
-                                                                       SONGS_FIELD_SONG_NAME)
+SELECT_SONG_NAME = 'SELECT {}, {}, {} FROM {} WHERE {} = (\'%s\')'.format(SONGS_FIELD_SONG_ID,
+                                                                          SONGS_FIELD_SONG_NAME,
+                                                                          SONGS_FIELD_FINGERPRINTED,
+                                                                          SONGS_TABLE,
+                                                                          SONGS_FIELD_SONG_NAME)
 
 SELECT_SONG_BY_FGP = 'SELECT {} FROM {} WHERE {} = %s'.format(SONGS_FIELD_SONG_NAME,
                                                               SONGS_TABLE,
@@ -262,11 +262,16 @@ def get_song_by_name(song_name):
     is_fingerprinted = 0
 
     try:
-        song_id, song_name, is_fingerprinted = cur.execute(select_query)
+        cur.execute(select_query)
         connection.commit()
     except:
         print('Error in get_song_by_name')
         connection.rollback()
+
+    for id, name, is_fgp in cur:
+        song_id = id
+        song_name = name
+        is_fingerprinted = is_fgp
 
     if song_id is not None and song_name is not '':
         return True, song_id, song_name, is_fingerprinted
@@ -309,7 +314,7 @@ def query(hashkey=None):
 
 
 def get_matches(list_of_hashes):
-    print('Get matches!')
+    #print('Get matches!')
     map = dict()
     for hash_key, offset in list_of_hashes:
         map[hash_key] = offset

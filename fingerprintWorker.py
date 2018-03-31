@@ -20,10 +20,10 @@ def retrieve_unfiltered_peaks(filename, limit=None):
     peaks = fgp_api.get_unfiltered_data()
     return peaks
 
-def fingerprint_worker(filename, limit=None):
-    st = time.time()
+def fingerprint_worker(filename, limit=None, grid_only=False):
+    #st = time.time()
     song_name, extension = os.path.splitext(filename)
-    print('Fingerprinting: ', song_name, '\nFile extension: ', extension)
+    #print('Fingerprinting: ', song_name, '\nFile extension: ', extension)
 
     num_channels, frame_rate, audio_data = hlp.retrieve_audio(filename, limit)
     #print('from fingerprint worker\n frame rate {}, data {}'.format(frame_rate, channels))
@@ -32,10 +32,15 @@ def fingerprint_worker(filename, limit=None):
     for num_channels, channel in enumerate(audio_data):
         hashes = fgp_api.fingerprint(channel, frame_rate=frame_rate)
 
+        if grid_only:
+            grid_points = fgp_api.fingerprint(channel, frame_rate=frame_rate, grid_only=grid_only)
+
+            return grid_points
+
         result |= set(hashes)
 
-    ft = time.time() - st
-    print('Elapsed fingerprinting time: ', ft)
+    #ft = time.time() - st
+    #print('Elapsed fingerprinting time: ', ft)
     return song_name, result
 
 def reset_database():
@@ -56,20 +61,27 @@ def insert_wav_to_db(song_n):
     for h in list_hash:
         db.insert_fingerprint(h[0], song_name, h[1])
 
-def align_matches(list_hash):
+def align_matches(list_matches):
     """picks the most likely correct song by doing a frequency count over the results"""
     diff_counter = dict()
     max_t_delta = 0
     largest_count = 0
     song_name = ''
 
-    for _tuple in list_hash:
+    # keep track of the most
+    # for _tuple in list_matches:
+    #     s_n, t_delta = _tuple
+    #     if s_n not in freq_counter:
+    #         freq_counter[s_n] = 0
+    #     freq_counter[s_n] += 1
+
+    for _tuple in list_matches:
         # song name and time delta from the list of hashes
         s_n, t_delta = _tuple
 
         if t_delta not in diff_counter:
             diff_counter[t_delta] = dict()
-        if s_n not in diff_counter:
+        if s_n not in diff_counter[t_delta]:
             diff_counter[t_delta][s_n] = 0
         diff_counter[t_delta][s_n] += 1
 
@@ -85,7 +97,7 @@ def align_matches(list_hash):
     if query_hit:
         song_name = name
     else:
-        print('Queried for {}\nNo such song in the database'.format(song_name))
+        print('Queried: {} ==> Nothing in the db'.format(s_n))
         return
 
     # information of returned song
@@ -200,5 +212,5 @@ def clean_not_fgp():
 
 
 #clean_not_fgp()
-fingerprint_songs(reset_db=True, song_limit=10)
+#fingerprint_songs(reset_db=True, song_limit=10)
 

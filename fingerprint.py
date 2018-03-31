@@ -80,12 +80,17 @@ class Fingerprint:
         peaks = zip(self.freq, self.time, self.amps)
         return list(peaks)
 
-    def fingerprint(self, channel_samples,
+    def fingerprint(self,
+                    channel_samples,
                     frame_rate=DEFAULT_FREQ,
                     wsize=DEFAULT_WINDOW_SIZE,
                     overlap_ratio=DEFAULT_OVERLAP_RATIO,
                     fan_val=DEFAULT_FAN_VALUE,
-                    min_amp=DEFAULT_MIN_AMP):
+                    min_amp=DEFAULT_MIN_AMP,
+
+                    grid_only=False,
+                    verbose=False):
+
         # FFT + conversion to spectral domain
         arr2D = mlab.specgram(channel_samples,
                               NFFT=wsize,
@@ -98,13 +103,17 @@ class Fingerprint:
         arr2D[arr2D == -np.inf] = 0
 
         # find local maxima
-        local_maxima = self.get_2D_peaks(arr2D, plot=False, min_amp=min_amp)
+        local_maxima = self.get_2D_peaks(arr2D, plot=False, min_amp=min_amp, verbose=verbose)
+
+        if grid_only:
+            return self.grid_filter_peaks(local_maxima)
+
         local_maxima = np.array(local_maxima)
 
         # return hashes
         return self.generate_hashes(local_maxima, fan_value=fan_val)
 
-    def get_2D_peaks(self, arr2D, plot=False, store_data=False, min_amp=DEFAULT_MIN_AMP):
+    def get_2D_peaks(self, arr2D, plot=False, store_data=False, min_amp=DEFAULT_MIN_AMP, verbose=False):
         struct = generate_binary_structure(2, 1)
         neighborhood = iterate_structure(struct, PEAK_NEIGHBORHOOD_SIZE)
 
@@ -138,11 +147,13 @@ class Fingerprint:
         freq_idx = [x[0] for x in peaks_filtered]
         time_idx = [x[1] for x in peaks_filtered]
         # frequency = [x[2] for x in peaks_filtered]
-        print('FINGERPRINTER DETAILS ***********')
-        print('Number of peak idx: ', len(freq_idx))
-        print('Number of time idx: ', len(time_idx))
-        print('Length of segment:',
-              round(len(arr2D[1]) / DEFAULT_FREQ * DEFAULT_WINDOW_SIZE * DEFAULT_OVERLAP_RATIO, 5), 'seconds')
+
+        if verbose:
+            print('FINGERPRINTER DETAILS ***********')
+            print('Number of peak idx: ', len(freq_idx))
+            print('Number of time idx: ', len(time_idx))
+            print('Length of segment:',
+                  round(len(arr2D[1]) / DEFAULT_FREQ * DEFAULT_WINDOW_SIZE * DEFAULT_OVERLAP_RATIO, 5), 'seconds')
 
         if plot:
             print('Plotting spectrogram!')
@@ -251,6 +262,7 @@ class Fingerprint:
             plt.show()
         # print('freq coords: {}\ntime coords: {}'.format(freq_coords, time_coords))
 
+        return [freq_coords, time_coords]
             # TODO: if invalid, delete from zip
 
     def generate_hashes(self, peaks, fan_value=DEFAULT_FAN_VALUE):

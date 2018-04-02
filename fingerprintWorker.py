@@ -68,13 +68,6 @@ def align_matches(list_matches):
     largest_count = 0
     song_name = ''
 
-    # keep track of the most
-    # for _tuple in list_matches:
-    #     s_n, t_delta = _tuple
-    #     if s_n not in freq_counter:
-    #         freq_counter[s_n] = 0
-    #     freq_counter[s_n] += 1
-
     for _tuple in list_matches:
         # song name and time delta from the list of hashes
         s_n, t_delta = _tuple
@@ -97,8 +90,8 @@ def align_matches(list_matches):
     if query_hit:
         song_name = name
     else:
-        print('Queried: {} ==> Nothing in the db'.format(s_n))
-        return
+        # returns 'no_track'
+        song_name = name
 
     # information of returned song
     nseconds = round(float(max_t_delta) /
@@ -110,6 +103,7 @@ def align_matches(list_matches):
         'song name': song_name,
         'frequency in db': largest_count,
         'time delta': int(max_t_delta),
+        'is fingerprinted': int(is_fng),
         'time (sec)': nseconds
     }
 
@@ -123,7 +117,8 @@ def files_in_dir(dir_path):
         files.append([dirpath, filenames])
     return files
 
-#### experiment 1 ####
+
+#### bulk add ####
 def fingerprint_songs(reset_db=False, song_limit=None):
     f = files_in_dir('C:\\Users\\Vlad\Documents\\thesis\\audioExtraction\\wavs')
 
@@ -144,7 +139,6 @@ def fingerprint_songs(reset_db=False, song_limit=None):
 
         # go through each file in the directory
         for file in file_in_cd:
-
             # don't re-fingerprint files
             if file in already_fingerprinted:
                 print('Skipping: {}'.format(file))
@@ -174,7 +168,7 @@ def fingerprint_songs(reset_db=False, song_limit=None):
     print('Number of wavs: ', song_counter)
 
 
-# TODO: find a more elegant solution ffs
+# TODO: find solution to format multiple extensions
 def get_wavs_by_fgp(is_fgp=0):
     res = list(db.get_songs_by_fgp_status(is_fgp))
 
@@ -188,12 +182,15 @@ def get_wavs_by_fgp(is_fgp=0):
     form = form.replace('[', '')
     form = form.replace(']', '')
 
-    li = form.split(',')
+    li = form.split('wav, ')
 
     clean_li = []
     for elem in li:
-        elem = elem.strip()
-        clean_li.append(elem)
+        if elem == li[-1]:
+            clean_li.append(elem)
+        else:
+            elem = elem.strip()
+            clean_li.append(elem + 'wav')
 
     # SQL quirk, empty cursors have a semi colon
     if clean_li[0] == ')':
@@ -203,7 +200,6 @@ def get_wavs_by_fgp(is_fgp=0):
     return number_of_tracks, clean_li
 
 def clean_not_fgp():
-    # TODO: fix issue where new songs are not inserted
     # remove fingerprints + songs marked as not fingerprinted
     #not_fingerprinted = get_wavs_by_fgp(0)
     last_fingerprinted = ['DAYTIME, JUNCTION WITH BUSY TRAFFIC, CARS, MOTORBIKES, TRUCKS, HORNING, PEOPLE ON THE STREET, BIG CITY LIFE, BOMBAY, MUMBAI_INCREDIBLE_INDIA_VOL_II_14.WAV']
@@ -211,6 +207,6 @@ def clean_not_fgp():
     db.delete_songs(last_fingerprinted)
 
 
-#clean_not_fgp()
-#fingerprint_songs(reset_db=True, song_limit=10)
-
+#fingerprint_songs(reset_db=False, song_limit=98)
+#x = get_wavs_by_fgp(0)
+#print(x)

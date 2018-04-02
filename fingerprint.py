@@ -263,7 +263,6 @@ class Fingerprint:
         # print('freq coords: {}\ntime coords: {}'.format(freq_coords, time_coords))
 
         return [freq_coords, time_coords]
-            # TODO: if invalid, delete from zip
 
     def generate_hashes(self, peaks, fan_value=DEFAULT_FAN_VALUE):
         #self.grid_filter_peaks(peaks)

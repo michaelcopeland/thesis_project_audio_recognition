@@ -62,3 +62,6 @@ __pycache__/
 
 # ignore obscenely massive wave files
 wavs/*
+
+# ignore numpy
+*.npy

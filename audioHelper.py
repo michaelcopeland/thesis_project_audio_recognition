@@ -1,7 +1,7 @@
 import wave
 import numpy as np
 import pyaudio
-#from pydub import AudioSegment
+from pydub import AudioSegment
 import soundfile as sf
 import time
 import sys
@@ -195,8 +195,9 @@ def retrieve_audio(wave_file, limit=None):
 
 # testing main
 if __name__ == '__main__':
-    file = 'C:\\Users\\Vlad\Documents\\thesis\\audioExtraction\\wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Articulated Sounds - Dice\\DICE on Neoprene, Throw and Roll, Mini, 1 One Die, v2.wav'
-    nc, f, data = retrieve_audio(file, limit=3)
+    file = 'C:\\Users\\Vlad\\Documents\\thesis\\audioExtraction\\wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Creative Audio Pool - INCREDIBLE SOUNDS OF INDIA COLLECTION\\DAYTIME JUNCTION 14.wav'
+
+    nc, f, data = retrieve_audio(file, limit=None)
     #fs, datas = retrieve_audio_data(file, limit=2)
     print(nc, ' ', f)
 

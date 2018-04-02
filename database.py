@@ -145,6 +145,8 @@ def insert_song(song_name='', fgp=0):
         connection.commit()
         print('Inserted song: {}'.format(song_name))
     except:
+        print('Could not insert {}'.format(song_name))
+        print('Make sure the path length is under 256 characters')
         connection.rollback()
 
 
@@ -273,7 +275,8 @@ def get_song_by_name(song_name):
         song_name = name
         is_fingerprinted = is_fgp
 
-    if song_id is not None and song_name is not '':
+    if song_id is 0 and song_name == '':
+        song_name = 'no_track'
         return True, song_id, song_name, is_fingerprinted
     return False, song_id, song_name, is_fingerprinted
 
@@ -325,7 +328,14 @@ def get_matches(list_of_hashes):
     num_query = len(values)
 
     query_matches = SELECT_MULTIPLE
+
+    # ensure there is something in the query (otherwise it crashes)
+    if num_query == 0:
+        num_query = 1
+        values = ['\'na\'']
+
     query_matches = query_matches % ', '.join(['%s'] * num_query)
+    #print(query_matches)
 
     cur.execute(query_matches, values)
 

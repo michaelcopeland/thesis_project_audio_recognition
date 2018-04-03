@@ -1,4 +1,5 @@
 import fingerprintWorker as fw
+import json
 
 RESULT_DICT = {
     'TP': 0,
@@ -121,5 +122,22 @@ def run_exp2():
         print('Limit: {} s'.format(l))
         print(result)
 
+
+def exp_aligned_matches():
+    song_path = 'C:\\Users\\Vlad\Documents\\thesis\\audioExtraction\\wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Chris Skyes - The Black Sea\\AMBIENCE Huge Waves 2m Away From Impact Point 1.wav'
+
+    sn, list_hashes = fw.fingerprint_worker(song_path, limit=2)
+    print('Querying: {}'.format(sn))
+
+    matches = fw.db.get_matches(list_hashes)
+
+    song, fam = fw.align_matches(matches, family=True)
+
+    print('Most likely res = {}'.format(song))
+    print('Candidates:\n')
+    for k, v in fam.items():
+        print('Key {} -- Value {}'.format(k, v))
+
+
 if __name__ == '__main__':
-    run_exp2()
+    exp_aligned_matches()

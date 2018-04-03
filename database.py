@@ -38,7 +38,7 @@ CREATE_FINGERPRINTS_TABLE = """
 CREATE TABLE IF NOT EXISTS {} (
 {}     int AUTO_INCREMENT PRIMARY KEY,
 {}     varchar(20),
-{}     varchar(100) NOT NULL,
+{}     varchar(150) NOT NULL,
 {}     int unsigned NOT NULL,
 INDEX({}),
 FOREIGN KEY ({}) REFERENCES {}({}) ON DELETE CASCADE 
@@ -50,7 +50,7 @@ FOREIGN KEY ({}) REFERENCES {}({}) ON DELETE CASCADE
 CREATE_SONGS_TABLE = """
 CREATE TABLE IF NOT EXISTS {} (
 {}       int unsigned AUTO_INCREMENT PRIMARY KEY,
-{}       varchar(100) NOT NULL,
+{}       varchar(150) NOT NULL,
 {}       tinyint DEFAULT 0,
 UNIQUE KEY {}({})
 );
@@ -144,10 +144,12 @@ def insert_song(song_name='', fgp=0):
         cur.execute(insert_query)
         connection.commit()
         print('Inserted song: {}'.format(song_name))
+        return True
     except:
         print('Could not insert {}'.format(song_name))
         print('Make sure the path length is under 256 characters')
         connection.rollback()
+        return False
 
 
 def insert_fingerprint(hashkey, song_name, time_offset):

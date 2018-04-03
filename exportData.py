@@ -31,20 +31,20 @@ def export(track):
                 #print(np.shape(res))
 
 
-amount, already_fingerprinted = fw.get_wavs_by_fgp(1)
-print('{} tracks already in database'.format(amount))
-
-
-export_counter = 0
-limit = 30
-
-for tr in already_fingerprinted:
-    if export_counter == limit:
-        print('Exported {} tracks'.format(export_counter))
-        break
-    if export(tr):
-        export_counter += 1
+# amount, already_fingerprinted = fw.get_wavs_by_fgp(1)
+# print('{} tracks already in database'.format(amount))
+#
+#
+# export_counter = 0
+# limit = 30
+#
+# for tr in already_fingerprinted:
+#     if export_counter == limit:
+#         print('Exported {} tracks'.format(export_counter))
+#         break
+#     if export(tr):
+#         export_counter += 1
 
 #export('birds_outside_002_wide.wav')
-#x = np.load('npArr/birds_outside_002_wide.wav.npy')
-#print(x)
+x = np.load('npArr/birds_outside_002_wide.wav.npy')
+print(x)

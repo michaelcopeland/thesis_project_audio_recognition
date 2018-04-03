@@ -61,7 +61,7 @@ def insert_wav_to_db(song_n):
     for h in list_hash:
         db.insert_fingerprint(h[0], song_name, h[1])
 
-def align_matches(list_matches):
+def align_matches(list_matches, family=False):
     """picks the most likely correct song by doing a frequency count over the results"""
     diff_counter = dict()
     max_t_delta = 0
@@ -106,6 +106,8 @@ def align_matches(list_matches):
         'is fingerprinted': int(is_fng),
         'time (sec)': nseconds
     }
+    if family:
+        return song, diff_counter
 
     return song
 
@@ -156,14 +158,18 @@ def fingerprint_songs(reset_db=False, song_limit=None):
             if ext in invalid_ext:
                 continue
 
-            # insert song
-            db.insert_song(file, 1)
-            song_counter += 1
+            # insert song returns true if it managed, false otherwise
+            res = db.insert_song(file, 1)
+            if res:
+                song_counter += 1
 
-            # generate and insert hashes
-            _, list_hashes = fingerprint_worker(path)
-            for h in list_hashes:
-                db.insert_fingerprint(h[0], file, h[1])
+                # generate and insert hashes
+                _, list_hashes = fingerprint_worker(path)
+                for h in list_hashes:
+                    db.insert_fingerprint(h[0], file, h[1])
+            else:
+                print('Fingerprinting skipped')
+                continue
 
     print('Number of wavs: ', song_counter)
 
@@ -207,6 +213,7 @@ def clean_not_fgp():
     db.delete_songs(last_fingerprinted)
 
 
-#fingerprint_songs(reset_db=False, song_limit=98)
-#x = get_wavs_by_fgp(0)
-#print(x)
+if __name__ == '__main__':
+    fingerprint_songs(reset_db=False, song_limit=25)
+    #x = get_wavs_by_fgp(0)
+    #print(x)

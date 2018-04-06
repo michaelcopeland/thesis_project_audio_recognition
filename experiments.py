@@ -140,4 +140,4 @@ def exp_aligned_matches():
 
 
 if __name__ == '__main__':
-    exp_aligned_matches()
+    run_exp2()

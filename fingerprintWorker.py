@@ -9,6 +9,7 @@ import time
 
 fgp_api = Fingerprint()
 invalid_ext = ['pdf', 'txt', 'jpg', 'wav.alt', 'csv', 'xlsx', 'alt']
+valid_ext   = ['wav', 'ogg', 'mp3', 'flac']
 
 def retrieve_unfiltered_peaks(filename, limit=None):
     print('Retrieving peaks for ', filename)
@@ -34,7 +35,6 @@ def fingerprint_worker(filename, limit=None, grid_only=False):
 
         if grid_only:
             grid_points = fgp_api.fingerprint(channel, frame_rate=frame_rate, grid_only=grid_only)
-
             return grid_points
 
         result |= set(hashes)

@@ -1,7 +1,9 @@
 """Stores audio information and allows to compute various similarity searches"""
 
-import waveReader
+from datasketch import MinHash
 from fingerprint import Fingerprint
+import fingerprintWorker as fw
+
 from scipy.signal import correlate2d, correlate
 from scipy.stats import pearsonr, linregress
 import numpy as np
@@ -103,4 +105,38 @@ class AudioSimilarity():
         # print(np.shape(wav2))
         plt.plot(wav1, wav2, '--b', wav1, '--r', wav2, alpha=0.75)
         plt.show()
+
+    def minHash(self, set1, set2):
+        m1, m2 = MinHash(), MinHash()
+
+        for d in set1:
+            m1.update(d.encode('utf8'))
+        for d in set2:
+            m2.update(d.encode('utf8'))
+        print("Estimated Jaccard for set1 and set2 is ", m1.jaccard(m2))
+
+        s1 = set(set1)
+        s2 = set(set2)
+        actual_jaccard = float(len(s1.intersection(s2))) / float(len(s1.union(s2)))
+        print("Actual Jaccard for set1 and set2 is ", actual_jaccard)
+
+if __name__=='__main__':
+    a = AudioSimilarity()
+
+    f1 = 'C:\\Users\\Vlad\\Documents\\thesis\\audioExtraction\\wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Chris Skyes - Shards Broken Glass\\Glass,Bottle,Break,Smash,Messy.wav'
+    f2 = 'C:\\Users\\Vlad\\Documents\\thesis\\audioExtraction\\wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Chris Skyes - Shards Broken Glass\\Glass,Shards,Smash,Medium Impact,Lots of Large Shards.wav'
+
+    file1 = 'wavs/estring.wav'
+    file2 = 'wavs/estring2.wav'
+
+    f = fw.fgp_api
+    f.set_grid_attributes(100, 100, 30, 30)
+
+    set1 = fw.fingerprint_worker(file1, grid_only=True)
+    set2 = fw.fingerprint_worker(file2, grid_only=True)
+
+    print(len(set1), len(set2))
+
+    a.minHash(set1, set2)
+
 

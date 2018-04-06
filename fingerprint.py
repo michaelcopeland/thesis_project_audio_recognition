@@ -57,12 +57,6 @@ FINGERPRINT_REDUCTION = 20
 # in order for it be hashed.
 # If the peak is outside this grid area it will be discarded
 
-TIME_INTERVAL = 50
-FREQ_INTERVAL = 50
-
-TIME_TOLERANCE = 20
-FREQ_TOLERANCE = 20
-
 
 class Fingerprint:
 
@@ -70,6 +64,12 @@ class Fingerprint:
         self.amps = None
         self.freq = None
         self.time = None
+
+        self.TIME_INTERVAL = 50
+        self.FREQ_INTERVAL = 50
+
+        self.TIME_TOLERANCE = 20
+        self.FREQ_TOLERANCE = 20
 
     def set_data(self, freq, time, amps):
         self.freq = freq
@@ -79,6 +79,20 @@ class Fingerprint:
     def get_unfiltered_data(self):
         peaks = zip(self.freq, self.time, self.amps)
         return list(peaks)
+
+    def set_grid_attributes(self, t_int, f_int, t_tol, f_tol):
+        """Set custom grid"""
+        self.TIME_INTERVAL = t_int
+        self.FREQ_INTERVAL = f_int
+
+        self.TIME_TOLERANCE = t_tol
+        self.FREQ_TOLERANCE = f_tol
+
+        print('\nTime interval= {}\nTime tolerance= {}\nFreq interval= {}\nFreq tolerance= {}'.format(
+            self.TIME_INTERVAL,
+            self.TIME_TOLERANCE,
+            self.FREQ_INTERVAL,
+            self.FREQ_TOLERANCE))
 
     def fingerprint(self,
                     channel_samples,
@@ -185,28 +199,28 @@ class Fingerprint:
              - tuple of frequency and time
              - 'invalid' if tuple is not within target zone
         """
-        _relative_f_idx = f % FREQ_INTERVAL
-        _relative_t_idx = t % TIME_INTERVAL
+        _relative_f_idx = f % self.FREQ_INTERVAL
+        _relative_t_idx = t % self.TIME_INTERVAL
 
         # find position on the grid
-        if f < FREQ_INTERVAL:
+        if f < self.FREQ_INTERVAL:
             lb_f = 0
         else:
             lb_f = f - _relative_f_idx
-        ub_f = lb_f + FREQ_INTERVAL
+        ub_f = lb_f + self.FREQ_INTERVAL
 
-        if t < TIME_INTERVAL:
+        if t < self.TIME_INTERVAL:
             lb_t = 0
         else:
             lb_t = t - _relative_t_idx
-        ub_t = lb_t + TIME_INTERVAL
+        ub_t = lb_t + self.TIME_INTERVAL
 
         # ensure time coordinates are within grid tolerance
-        valid_lt = t <= lb_t + TIME_TOLERANCE
-        valid_ut = t >= ub_t - TIME_TOLERANCE
+        valid_lt = t <= lb_t + self.TIME_TOLERANCE
+        valid_ut = t >= ub_t - self.TIME_TOLERANCE
         # ensure frequency coordinates are within grid tolerance
-        valid_lf = f <= lb_f + FREQ_TOLERANCE
-        valid_uf = f >= ub_f - FREQ_TOLERANCE
+        valid_lf = f <= lb_f + self.FREQ_TOLERANCE
+        valid_uf = f >= ub_f - self.FREQ_TOLERANCE
 
         # what coordinate do we return
         if (valid_lt or valid_ut) and (valid_lf or valid_uf):
@@ -238,31 +252,30 @@ class Fingerprint:
         Return:
              a filtered list of frequency and time points
         """
-        freq_coords = []
-        time_coords = []
+        # peaks will be stored as string coordinates for later use by minHash
+        str_peaks = []
+        #freq_coords = []
+        #time_coords = []
 
         for i in range(len(peaks)):
             f, t = self._localize_coord(peaks[i][IDX_FREQ_I], peaks[i][IDX_TIME_J])
             if type(f) and type(t) is not str:
-                freq_coords.append(f)
-                time_coords.append(t)
-        print('Length of peak lists={} -freq {} -time'.format(len(freq_coords), len(time_coords)))
+                p_coord = str(t) + str(f)
+                str_peaks.append(p_coord)
+                #freq_coords.append(f)
+                #time_coords.append(t)
+        # print('Length of peak lists={} -freq {} -time'.format(len(freq_coords), len(time_coords)))
 
         if plot:
             print('Plotting grid!')
-            print('\nTime interval= {}\nTime tolerance= {}\nFreq interval= {}\nFreq tolerance= {}'.format(
-                TIME_INTERVAL,
-                TIME_TOLERANCE,
-                FREQ_INTERVAL,
-                FREQ_TOLERANCE))
 
             plt.rc('grid', linestyle='-', color='black')
-            plt.scatter(freq_coords, time_coords)
+            #plt.scatter(freq_coords, time_coords)
             plt.grid(True)
             plt.show()
         # print('freq coords: {}\ntime coords: {}'.format(freq_coords, time_coords))
 
-        return [freq_coords, time_coords]
+        return str_peaks
 
     def generate_hashes(self, peaks, fan_value=DEFAULT_FAN_VALUE):
         #self.grid_filter_peaks(peaks)

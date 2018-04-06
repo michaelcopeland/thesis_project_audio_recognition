@@ -1,7 +1,7 @@
 import wave
 import numpy as np
 import pyaudio
-from pydub import AudioSegment
+#from pydub import AudioSegment
 import soundfile as sf
 import time
 import sys

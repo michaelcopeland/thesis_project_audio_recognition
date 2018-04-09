@@ -1,12 +1,12 @@
 import fingerprintWorker as fw
-import json
 
 RESULT_DICT = {
     'TP': 0,
     'TN': 0,
     'FP': 0,
     'FN': 0,
-    'FA': 0 # false accept
+    'FA': 0, # false accept
+    'FAM_HIT': 0
 }
 
 
@@ -14,18 +14,6 @@ def reset_result_dict():
     for key in RESULT_DICT.keys():
         RESULT_DICT[key] = 0
 
-##### Database query: 10 songs fingerprinted / 10 songs queried #####
-# Songs:
-# 01.wav
-# aic.wav
-# birds_outside_002_wide.wav
-# busy_dining_room_002.wav
-# madrid_food_market_busy_001.wav
-# rain_umbrella_001_wide.wav
-# 50s_elevator_ride_down_001.wav
-# elevator_mechanism_002_wide.wav
-# elevator_mechanism_005_wide.wav
-# soviet_elevator_door_close_001.wav
 def exp(song, limit=None):
     """Runs a query experiment
 
@@ -38,8 +26,8 @@ def exp(song, limit=None):
     """
     all_files = fw.files_in_dir('C:\\Users\\Vlad\Documents\\thesis\\audioExtraction\\wavs')
 
-    song_in_fgp_statu = song[0]
-    song_in        = song[1]
+    song_in_fgp_status = song[0]
+    song_in           = song[1]
 
     # directory = ''
     # files_in_dir = []
@@ -56,7 +44,7 @@ def exp(song, limit=None):
 
                 matches = fw.db.get_matches(list_hash)
 
-                result_track = fw.align_matches(matches)
+                result_track, matched_fam = fw.align_matches(matches, family=True)
 
                 # result track name
                 r_t_name = result_track['song name']
@@ -65,17 +53,27 @@ def exp(song, limit=None):
                 if r_t_name == song_in:
                     RESULT_DICT['TP'] += 1
                 # TN
-                elif r_t_name == 'no_track' and song_in_fgp_statu == 0:
+                elif r_t_name == 'no_track' and song_in_fgp_status == 0:
                     RESULT_DICT['TN'] += 1
                 # FP
-                elif r_t_name != song_in and song_in_fgp_statu == 1:
+                elif r_t_name != song_in and song_in_fgp_status == 1:
                     RESULT_DICT['FP'] += 1
                 # FN
-                elif r_t_name == 'no_track' and song_in_fgp_statu == 1:
+                elif r_t_name == 'no_track' and song_in_fgp_status == 1:
                     RESULT_DICT['FN'] += 1
                 # FA
-                elif r_t_name != song_in and song_in_fgp_statu == 0:
+                elif r_t_name != song_in and song_in_fgp_status == 0:
                     RESULT_DICT['FA'] += 1
+
+                fam_hit = False
+                for k, v in matched_fam.items():
+                    if song_in in v:
+                        #print('hit! ', song, v)
+                        fam_hit = True
+                if fam_hit:
+                    RESULT_DICT['FAM_HIT'] += 1
+                else:
+                    print('!!!!!!!!!!!!!\nSong in: {}\nValues: {}'.format(song_in, matched_fam.values()))
 
     print('Querying {} --- {} s\nResult={}'.format(song_in, limit, result_track))
     return RESULT_DICT
@@ -122,6 +120,22 @@ def run_exp2():
         print('Limit: {} s'.format(l))
         print(result)
 
+def run_exp3():
+    """the point is to find if the correct song is the family of returned songs"""
+    limits = [1, 2, 4, 8]
+
+    num_tracks, track = fw.get_wavs_by_fgp(1)
+
+    result = None
+    for l in limits:
+
+        # reset the result dictionary for different limits
+        reset_result_dict()
+        for t in track:
+            t = [1, t]
+            result = exp(t, l)
+        print('Limit: {} s'.format(l))
+        print(result)
 
 def exp_aligned_matches():
     song_path = 'C:\\Users\\Vlad\Documents\\thesis\\audioExtraction\\wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Chris Skyes - The Black Sea\\AMBIENCE Huge Waves 2m Away From Impact Point 1.wav'
@@ -140,4 +154,4 @@ def exp_aligned_matches():
 
 
 if __name__ == '__main__':
-    run_exp2()
+    run_exp3()

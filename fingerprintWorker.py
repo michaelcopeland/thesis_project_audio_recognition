@@ -9,7 +9,13 @@ import time
 
 fgp_api = Fingerprint()
 invalid_ext = ['pdf', 'txt', 'jpg', 'wav.alt', 'csv', 'xlsx', 'alt']
-valid_ext   = ['wav', 'ogg', 'mp3', 'flac']
+valid_ext   = ['.wav', 'ogg', 'mp3', 'flac']
+
+def has_valid_extension(path_to_file):
+    path, ext = os.path.splitext(path_to_file)
+    if ext in valid_ext:
+        return True
+    return False
 
 def retrieve_unfiltered_peaks(filename, limit=None):
     print('Retrieving peaks for ', filename)
@@ -89,6 +95,8 @@ def align_matches(list_matches, family=False):
 
     if query_hit:
         song_name = name
+    elif song_name == 'track_not_fingerprinted':
+        pass
     else:
         # returns 'no_track'
         song_name = name
@@ -174,36 +182,18 @@ def fingerprint_songs(reset_db=False, song_limit=None):
     print('Number of wavs: ', song_counter)
 
 
-# TODO: find solution to format multiple extensions
 def get_wavs_by_fgp(is_fgp=0):
     res = list(db.get_songs_by_fgp_status(is_fgp))
 
-    form = str(res)
-    form = form.replace('(', '')
-    form = form.replace('),', '')
-    form = form.replace(',))', '')
+    clean_list = []
+    for elem in res:
+        temp = str(elem)[2:-3]
+        clean_list.append(temp)
+    print(clean_list)
 
-    form = form.replace('\'', '')
+    number_of_tracks = len(clean_list)
+    return number_of_tracks, clean_list
 
-    form = form.replace('[', '')
-    form = form.replace(']', '')
-
-    li = form.split('wav, ')
-
-    clean_li = []
-    for elem in li:
-        if elem == li[-1]:
-            clean_li.append(elem)
-        else:
-            elem = elem.strip()
-            clean_li.append(elem + 'wav')
-
-    # SQL quirk, empty cursors have a semi colon
-    if clean_li[0] == ')':
-        clean_li = []
-
-    number_of_tracks = len(clean_li)
-    return number_of_tracks, clean_li
 
 def clean_not_fgp():
     # remove fingerprints + songs marked as not fingerprinted
@@ -214,6 +204,6 @@ def clean_not_fgp():
 
 
 if __name__ == '__main__':
-    fingerprint_songs(reset_db=False, song_limit=25)
-    #x = get_wavs_by_fgp(0)
-    #print(x)
+    #fingerprint_songs(reset_db=False, song_limit=25)
+    x = get_wavs_by_fgp(0)
+    print(x)

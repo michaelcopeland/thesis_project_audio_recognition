@@ -120,23 +120,33 @@ class AudioSimilarity():
         actual_jaccard = float(len(s1.intersection(s2))) / float(len(s1.union(s2)))
         print("Actual Jaccard for set1 and set2 is ", actual_jaccard)
 
-if __name__=='__main__':
+def get_similarity(dir_path):
     a = AudioSimilarity()
+    fw.fgp_api.set_grid_attributes(100, 100, 30, 30)
 
-    f1 = 'C:\\Users\\Vlad\\Documents\\thesis\\audioExtraction\\wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Chris Skyes - Shards Broken Glass\\Glass,Bottle,Break,Smash,Messy.wav'
-    f2 = 'C:\\Users\\Vlad\\Documents\\thesis\\audioExtraction\\wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Chris Skyes - Shards Broken Glass\\Glass,Shards,Smash,Medium Impact,Lots of Large Shards.wav'
+    sets = {}
+    files = fw.files_in_dir(dir_path)
 
-    file1 = 'wavs/estring.wav'
-    file2 = 'wavs/estring2.wav'
+    for tuple in files:
+        dir = tuple[0]
+        all_files = tuple[1]
 
-    f = fw.fgp_api
-    f.set_grid_attributes(100, 100, 30, 30)
+        for current_file in all_files:
+            if fw.has_valid_extension(dir+ '\\' + current_file):
+                print(current_file)
+                grid = fw.fingerprint_worker(dir_path + '\\' + current_file, grid_only=True)
+                print(grid)
+                sets[current_file] = grid
 
-    set1 = fw.fingerprint_worker(file1, grid_only=True)
-    set2 = fw.fingerprint_worker(file2, grid_only=True)
+        # print(sets)
+        main_track = 'Lock01_outdoor_opening_lite03.wav'
+        main_Set = sets[main_track]
 
-    print(len(set1), len(set2))
+        for k, v in sets.items():
+            if k is not main_track:
+                print(main_track, ' vs ', k)
+                a.minHash(main_Set, v)
 
-    a.minHash(set1, set2)
 
-
+if __name__=='__main__':
+    get_similarity('C:\\Users\\Vlad\\Documents\\thesis\\audioExtraction\\wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Alexander Ahura - Locks & Keys')

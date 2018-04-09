@@ -251,8 +251,11 @@ def get_songs_by_fgp_status(is_fgp=0):
         cur.execute(select_query)
         connection.commit()
 
-        yield cur.fetchall()
-        print('Success!')
+        result = []
+        for res in cur:
+            result.append(res)
+        return result
+        #print('Success!')
     except:
         connection.rollback()
         print('Songs could not be retrieved')
@@ -280,6 +283,7 @@ def get_song_by_name(song_name):
     if song_id is 0 and song_name == '':
         song_name = 'no_track'
         return True, song_id, song_name, is_fingerprinted
+
     return False, song_id, song_name, is_fingerprinted
 
 def query_all_fingerprints():
@@ -333,8 +337,9 @@ def get_matches(list_of_hashes):
 
     # ensure there is something in the query (otherwise it crashes)
     if num_query == 0:
-        num_query = 1
-        values = ['\'na\'']
+        return ('track_not_fingerprinted', 9999)
+        #num_query = 1
+        #values = ['\'na\'']
 
     query_matches = query_matches % ', '.join(['%s'] * num_query)
     #print(query_matches)
@@ -348,3 +353,6 @@ def get_matches(list_of_hashes):
 # REMEMBER TO CREATE THE DATABASE WITH MYSQL!!!
 connection = connect()
 cur = connection.cursor()
+
+if __name__=='__main__':
+    get_songs_by_fgp_status(1)

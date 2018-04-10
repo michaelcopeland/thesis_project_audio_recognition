@@ -180,7 +180,7 @@ def align_matches_weighted(list_matches):
         'song name': ret_name,
         'is fingerprinted': int(is_fng),
     }
-    return track, res
+    return track, candidates
 
 
 def files_in_dir(dir_path):

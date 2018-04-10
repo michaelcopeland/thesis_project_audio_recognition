@@ -113,42 +113,76 @@ class AudioSimilarity():
             m1.update(d.encode('utf8'))
         for d in set2:
             m2.update(d.encode('utf8'))
-        print("Estimated Jaccard for set1 and set2 is ", m1.jaccard(m2))
+        print("Estimated Jaccard: ", m1.jaccard(m2))
 
         s1 = set(set1)
         s2 = set(set2)
         actual_jaccard = float(len(s1.intersection(s2))) / float(len(s1.union(s2)))
-        print("Actual Jaccard for set1 and set2 is ", actual_jaccard)
+        print("Actual Jaccard: ", actual_jaccard)
 
-def get_similarity(dir_path):
+
+def get_similarity(list_dir, grid_setup):
+    """Receives a list of folders each containing audio files.
+    Returns the similarity values per grid size for each folder.
+
+    Attributes:
+        list_dir   - a list of directories in which to look for songs
+        grid_setup - a list of grid setup values ie (50, 50, 20, 20)
+    """
     a = AudioSimilarity()
-    fw.fgp_api.set_grid_attributes(50, 50, 20, 20)
 
-    sets = {}
-    files = fw.files_in_dir(dir_path)
+    for stp in grid_setup:
+        tint = stp[0]
+        fint = stp[1]
+        ttol = stp[2]
+        ftol = stp[3]
+        fw.fgp_api.set_grid_attributes(tint, fint, ttol, ftol)
 
-    for tuple in files:
-        dir = tuple[0]
-        all_files = tuple[1]
+        for dir in list_dir:
+            paths = fw.files_in_dir('wavs')
 
-        for current_file in all_files:
-            if fw.has_valid_extension(dir+ '\\' + current_file):
-                print(current_file)
-                grid = fw.fingerprint_worker(dir_path + '\\' + current_file, grid_only=True)
-                print(grid)
-                sets[current_file] = grid
+            for tup in paths:
+                directory_name = tup[0]
+                files          = tup[1]
 
-        # print(sets)
-        main_track = 'Detunized-Infinite-North-38.wav'
-        main_Set = sets[main_track]
+                if directory_name == dir:
+                    primary_file = files[-1]
+                    primary_set = fw.fingerprint_worker(dir + '\\' + primary_file, grid_only=True)
 
-        for k, v in sets.items():
-            if k is not main_track:
-                print(main_track, ' vs ', k)
-                a.minHash(main_Set, v)
+                    for _f in files:
+                        if _f != primary_file:
+                            secondary_set = fw.fingerprint_worker(dir + '\\' + _f, grid_only=True)
+
+                            print('{} <> {}'.format(primary_file, _f))
+                            a.minHash(primary_set, secondary_set)
 
 
 if __name__=='__main__':
-    path  = 'C:\\Users\\Vlad\\Documents\\thesis\\audioExtraction\\wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Detunized - Infinite'
-    path1 = 'C:\\Users\\Vlad\\Documents\\thesis\\audioExtraction\\wavs'
-    get_similarity(path)
+    list_paths=['wavs\\c',
+                'wavs\\river',
+                'wavs\\estring',
+                'wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Alexander Ahura -  Groats Part1',
+                'wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Bluezone Corporation - War Zone (Designed Explosions)',
+                'wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Bluezone Corporation - Titanium - Cinematic Trailer Samples',
+                'wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Borg Sound - Harley Davidson Sportster Iron 883',
+                'wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Borg Sound - Gym weights']
+
+    list_grid_setup = [(100, 100, 30, 30),
+                       (150, 150, 60, 60)]
+
+    alternate_grid = [(150, 150, 60, 60),
+                      (200, 200, 70, 70),  # too high, but acceptable results
+                      (250, 250, 80, 80)]  # seems to cap
+
+    get_similarity(list_paths, alternate_grid)
+
+    # TODO: make a dictionary of the folder structure
+    # folder -> [list of files]
+
+    # TODO: make addition of file frequency to the weight calculation in fingerprint align_matches_weighted
+
+    # TODO: implement search for k nearest songs with minhash
+
+    # TODO: save all of the minHash test files with these two grid setups
+
+    # TODO: test for wider grids than (150, 150), distinguish for larger tracks !!!

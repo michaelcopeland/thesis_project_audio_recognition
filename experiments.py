@@ -1,4 +1,5 @@
 import fingerprintWorker as fw
+import matplotlib.pyplot as plt
 
 RESULT_DICT = {
     'TP': 0,
@@ -79,6 +80,60 @@ def exp(song, limit=None):
     return RESULT_DICT
 
 
+def exp_with_weighted_align(song, limit=None):
+    all_files = fw.files_in_dir('C:\\Users\\Vlad\Documents\\thesis\\audioExtraction\\wavs')
+
+    song_in_fgp_status = song[0]
+    song_in = song[1]
+
+    result_track = ''
+
+    for tup in all_files:
+        directory = tup[0]
+        files_in_dir = tup[1]
+
+        for track in files_in_dir:
+            # ensure we get the wrong song
+            if track == song_in:
+                sn, list_hash = fw.fingerprint_worker(directory + '\\' + track, limit=limit)
+
+                matches = fw.db.get_matches(list_hash)
+
+                result_track, matched_fam = fw.align_matches_weighted(matches)
+
+                # result track name
+                r_t_name = result_track['song name']
+
+                # TP
+                if r_t_name == song_in:
+                    RESULT_DICT['TP'] += 1
+                # TN
+                elif r_t_name == 'no_track' and song_in_fgp_status == 0:
+                    RESULT_DICT['TN'] += 1
+                # FP
+                elif r_t_name != song_in and song_in_fgp_status == 1:
+                    RESULT_DICT['FP'] += 1
+                # FN
+                elif r_t_name == 'no_track' and song_in_fgp_status == 1:
+                    RESULT_DICT['FN'] += 1
+                # FA
+                elif r_t_name != song_in and song_in_fgp_status == 0:
+                    RESULT_DICT['FA'] += 1
+
+                fam_hit = False
+                for k, v in matched_fam.items():
+                    if song_in in v:
+                        # print('hit! ', song, v)
+                        fam_hit = True
+                if fam_hit:
+                    RESULT_DICT['FAM_HIT'] += 1
+                else:
+                    print('!!!!!!!!!!!!!\nSong in: {}\nValues: {}'.format(song_in, matched_fam.values()))
+
+    print('Querying {} --- {} s\nResult={}'.format(song_in, limit, result_track))
+    return RESULT_DICT
+
+
 tracks_for_exp_1 = ['01.wav',
                     'aic.wav',
                     'birds_outside_002_wide.wav',
@@ -137,6 +192,22 @@ def run_exp3():
         print('Limit: {} s'.format(l))
         print(result)
 
+def run_exp4_align_weighted():
+    limits = [1, 2, 4, 8]
+
+    num_tracks, track = fw.get_wavs_by_fgp(1)
+
+    result = None
+    for l in limits:
+
+        # reset the result dictionary for different limits
+        reset_result_dict()
+        for t in track:
+            t = [1, t]
+            result = exp_with_weighted_align(t, l)
+        print('Limit: {} s'.format(l))
+        print(result)
+
 def exp_aligned_matches():
     song_path = 'C:\\Users\\Vlad\Documents\\thesis\\audioExtraction\\wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Chris Skyes - The Black Sea\\AMBIENCE Huge Waves 2m Away From Impact Point 1.wav'
 
@@ -152,6 +223,31 @@ def exp_aligned_matches():
     for k, v in fam.items():
         print('Key {} -- Value {}'.format(k, v))
 
+def test_list_hash_colision_rate(test_track, limit=None):
+    name, list_hash = fw.fingerprint_worker(test_track, limit)
+    return list_hash
+
+def run_test_list_colision_rate():
+    test_track = 'C:\\Users\\Vlad\\Documents\\thesis\\audioExtraction\\wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Articulated Sounds - Quiet Streets\\QUIET STREET Back alley, people chatting, ST.wav'
+    _, list_hash_all = fw.fingerprint_worker(test_track)
+
+    l_num_hash = []
+    num_col_hash = []
+    for l in range(0, 132):
+        print('limit= ', l)
+        limited_list = test_list_hash_colision_rate(test_track, limit=l)
+
+        num_hash = len(limited_list)
+        intersect = len(limited_list.intersection(list_hash_all))
+        l_num_hash.append(num_hash)
+        num_col_hash.append(intersect)
+
+        print('Num hash: {}'.format(num_hash))
+        print('intersection=', intersect)
+
+        plt.plot(l_num_hash, num_col_hash)
+        plt.show()
+
 
 if __name__ == '__main__':
-    run_exp3()
+    run_exp4_align_weighted()

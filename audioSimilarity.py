@@ -122,7 +122,7 @@ class AudioSimilarity():
 
 def get_similarity(dir_path):
     a = AudioSimilarity()
-    fw.fgp_api.set_grid_attributes(100, 100, 30, 30)
+    fw.fgp_api.set_grid_attributes(50, 50, 20, 20)
 
     sets = {}
     files = fw.files_in_dir(dir_path)
@@ -139,7 +139,7 @@ def get_similarity(dir_path):
                 sets[current_file] = grid
 
         # print(sets)
-        main_track = 'Lock01_outdoor_opening_lite03.wav'
+        main_track = 'Detunized-Infinite-North-38.wav'
         main_Set = sets[main_track]
 
         for k, v in sets.items():
@@ -149,4 +149,6 @@ def get_similarity(dir_path):
 
 
 if __name__=='__main__':
-    get_similarity('C:\\Users\\Vlad\\Documents\\thesis\\audioExtraction\\wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Alexander Ahura - Locks & Keys')
+    path  = 'C:\\Users\\Vlad\\Documents\\thesis\\audioExtraction\\wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Detunized - Infinite'
+    path1 = 'C:\\Users\\Vlad\\Documents\\thesis\\audioExtraction\\wavs'
+    get_similarity(path)

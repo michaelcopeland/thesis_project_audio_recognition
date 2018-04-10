@@ -261,6 +261,7 @@ class Fingerprint:
             f, t = self._localize_coord(peaks[i][IDX_FREQ_I], peaks[i][IDX_TIME_J])
             if type(f) and type(t) is not str:
                 p_coord = str(t) + str(f)
+                #p_coord = str(f)
                 str_peaks.append(p_coord)
                 #freq_coords.append(f)
                 #time_coords.append(t)

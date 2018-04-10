@@ -6,14 +6,15 @@ import database as db
 import audioHelper as hlp
 import os
 import time
+import math
 
 fgp_api = Fingerprint()
-invalid_ext = ['pdf', 'txt', 'jpg', 'wav.alt', 'csv', 'xlsx', 'alt']
-valid_ext   = ['.wav', 'ogg', 'mp3', 'flac']
+INVALID_EXT = ['pdf', 'txt', 'jpg', 'wav.alt', 'csv', 'xlsx', 'alt']
+VALID_EXT   = ['.wav', 'ogg', 'mp3', 'flac']
 
 def has_valid_extension(path_to_file):
     path, ext = os.path.splitext(path_to_file)
-    if ext in valid_ext:
+    if ext in VALID_EXT:
         return True
     return False
 
@@ -67,6 +68,7 @@ def insert_wav_to_db(song_n):
     for h in list_hash:
         db.insert_fingerprint(h[0], song_name, h[1])
 
+
 def align_matches(list_matches, family=False):
     """picks the most likely correct song by doing a frequency count over the results"""
     diff_counter = dict()
@@ -119,6 +121,68 @@ def align_matches(list_matches, family=False):
 
     return song
 
+
+def align_matches_weighted(list_matches):
+    candidates = dict()
+
+    for tup in list_matches:
+        track_name, time_delta = tup
+
+        if time_delta not in candidates:
+            candidates[time_delta] = dict()
+        if track_name not in candidates[time_delta]:
+            candidates[time_delta][track_name] = 1
+        else:
+            candidates[time_delta][track_name] += 1
+
+    weighted_candidates = []
+    # each candidate is a tuple of (weight, (k,v))
+    # default weight = 1
+    # formula    = ((e ^ -(|time_delta|)) / number of candidates of that key)
+    # formula alt= ((e ^ -(time_delta ^ 2)) / number of candidates of that key) - use this for stronger filtering
+    for k, v in candidates.items():
+        cands_per_key = len(v.values())
+        cand_weight = float(math.e ** (-abs(k))) * 1000
+        cand_weight = cand_weight / cands_per_key
+        cand_tup = (cand_weight, k, v)
+
+        weighted_candidates.append(cand_tup)
+
+    weighted_candidates = sorted(weighted_candidates, key=lambda weight: weight[0])
+    res = [x for x in weighted_candidates if x[0] > 0.0]
+
+    if len(res) == 0:
+        return {'song id': 0,
+        'song name': 'no_track',
+        'is fingerprinted': 0}, candidates
+
+    prime_candidate = res[-1]
+    max_count = 0
+    query_track = ''
+
+    for k, v in prime_candidate[2].items():
+        if v > max_count:
+            max_count = v
+            query_track = k
+
+    query_hit, id, name, is_fng = db.get_song_by_name(query_track)
+
+    if query_hit:
+        ret_name = name
+    elif name == 'track_not_fingerprinted':
+        ret_name = 'track_not_fingerprinted'
+    else:
+        # returns 'no_track' in case no query hit
+        ret_name = name
+
+    track = {
+        'song id': id,
+        'song name': ret_name,
+        'is fingerprinted': int(is_fng),
+    }
+    return track, res
+
+
 def files_in_dir(dir_path):
     """Returns all stored wavs"""
     files = []
@@ -163,7 +227,7 @@ def fingerprint_songs(reset_db=False, song_limit=None):
 
             # avoid invalid extensions
             ext = file.split(".")[-1].lower()
-            if ext in invalid_ext:
+            if ext in INVALID_EXT:
                 continue
 
             # insert song returns true if it managed, false otherwise
@@ -204,6 +268,15 @@ def clean_not_fgp():
 
 
 if __name__ == '__main__':
-    #fingerprint_songs(reset_db=False, song_limit=25)
-    x = get_wavs_by_fgp(0)
+
+    test1 = 'C:\\Users\\Vlad\\Documents\\thesis\\audioExtraction\\wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Chris Skyes - The Black Sea\\SFX Medium Wave Splash on Rocks 12.wav'
+    sn, list_hash = fingerprint_worker('wavs/estring.wav',
+                                       limit=2)
+
+    matches = db.get_matches(list_hash)
+
+    x, r = align_matches_weighted(matches)
     print(x)
+    print(r)
+    for _ in r:
+        print(_)

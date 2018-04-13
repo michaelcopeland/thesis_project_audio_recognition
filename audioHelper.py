@@ -1,7 +1,6 @@
 import wave
 import numpy as np
 import pyaudio
-#from pydub import AudioSegment
 import soundfile as sf
 import time
 import sys
@@ -142,56 +141,6 @@ def retrieve_audio(wave_file, limit=None):
 
     elif num_channels == 2:
         return num_channels, frame_rate, list(audio_data)
-
-# def retrieve_audio_data(filename, limit=None):
-#     """DEPRECATED - see retrieve_audio
-#
-#     Retrieves audio information from an audio file.
-#     In case of a 24-bit file it uses AudioHelper(with wave)
-#
-#     Returns:
-#         frame_rate - rate at which audio is being sampled in Hz
-#         channels   - the audio data of the song whether it is mono or stereo
-#     """
-#     try:
-#         print('Audio helper: Fetching audio data for ', filename)
-#         audio_data = AudioSegment.from_file(filename)
-#
-#         if limit:
-#             print('limit - old')
-#             # the limit refers to a segment of audio, by default we want to retrieve the entire audio data
-#             audio_data = audio_data[:(limit * 1000)]
-#             #print('len={} type={}'.format(len(audio_data), type(audio_data)))
-#
-#         # raw data is pydub's representation of the raw audio bytestring
-#         data = np.fromstring(audio_data.raw_data, dtype=np.int16)
-#         #print('data: \n', data, '\nlength of data:', len(data))
-#
-#         channels = []
-#
-#         # accounting for mono / stereo
-#         for chn in range(audio_data.channels):
-#             channels.append(data[chn::audio_data.channels])
-#
-#         frame_rate = audio_data.frame_rate
-#         if AudioSegment.converter == 'other':
-#             raise Exception('hack')
-#
-#     # this does not work as intended
-#     except Exception:#audioop.error:
-#         print('Audio is 24-bit\nUsing wave')
-#         helper = AudioHelper(filename)
-#         frame_rate, sample_width, audio_data = helper.get_wav_audio_data(filename)
-#
-#         audio_data = np.array(audio_data, dtype=np.int16)
-#         audio_data = audio_data.T
-#         audio_data = audio_data.astype(np.int16)
-#         print('shape', audio_data.shape)
-#
-#         channels = []
-#         for chn in audio_data:
-#             channels.append(chn)
-#     return frame_rate, channels
 
 # testing main
 if __name__ == '__main__':

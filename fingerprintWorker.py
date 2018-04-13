@@ -1,6 +1,7 @@
 # Based on Will Drevo's DejaVu
 
 from fingerprint import Fingerprint
+import exportData as export
 import fingerprint as fgp
 import database as db
 import audioHelper as hlp
@@ -12,11 +13,13 @@ fgp_api = Fingerprint()
 INVALID_EXT = ['pdf', 'txt', 'jpg', 'wav.alt', 'csv', 'xlsx', 'alt']
 VALID_EXT   = ['.wav', 'ogg', 'mp3', 'flac']
 
+
 def has_valid_extension(path_to_file):
     path, ext = os.path.splitext(path_to_file)
     if ext in VALID_EXT:
         return True
     return False
+
 
 def retrieve_unfiltered_peaks(filename, limit=None):
     print('Retrieving peaks for ', filename)
@@ -28,12 +31,13 @@ def retrieve_unfiltered_peaks(filename, limit=None):
     peaks = fgp_api.get_unfiltered_data()
     return peaks
 
-def fingerprint_worker(filename, limit=None, grid_only=False):
-    #st = time.time()
-    song_name, extension = os.path.splitext(filename)
-    #print('Fingerprinting: ', song_name, '\nFile extension: ', extension)
 
-    num_channels, frame_rate, audio_data = hlp.retrieve_audio(filename, limit)
+def fingerprint_worker(file_path, limit=None, grid_only=False):
+    #st = time.time()
+    song_name, extension = os.path.splitext(file_path)
+    # print('Fingerprinting: ', song_name, '\nFile extension: ', extension)
+
+    num_channels, frame_rate, audio_data = hlp.retrieve_audio(file_path, limit)
     #print('from fingerprint worker\n frame rate {}, data {}'.format(frame_rate, channels))
     result = set()
 
@@ -50,11 +54,13 @@ def fingerprint_worker(filename, limit=None, grid_only=False):
     #print('Elapsed fingerprinting time: ', ft)
     return song_name, result
 
+
 def reset_database():
     """drops all tables and recreates the db"""
     db.connect()
     db.drop_all_tables()
     db.setup()
+
 
 def insert_wav_to_db(song_n):
     #db.connect()
@@ -122,6 +128,15 @@ def align_matches(list_matches, family=False):
     return song
 
 
+def get_max_track_frequency(list_tracks):
+    """Interates through a list of tuples (track, frequency of track) and returns the maximum value"""
+    max_t_frequ = 0
+    for t in list_tracks.keys():
+        if list_tracks[t] > max_t_frequ:
+            max_t_frequ = list_tracks[t]
+    return max_t_frequ
+
+
 def align_matches_weighted(list_matches):
     candidates = dict()
 
@@ -138,13 +153,12 @@ def align_matches_weighted(list_matches):
     weighted_candidates = []
     # each candidate is a tuple of (weight, (k,v))
     # default weight = 1
-    # formula    = ((e ^ -(|time_delta|)) / number of candidates of that key)
+    # formula    = (e ^ -(|time_delta|)) + max time delta value over a candidate list
     # formula alt= ((e ^ -(time_delta ^ 2)) / number of candidates of that key) - use this for stronger filtering
     for k, v in candidates.items():
-        cands_per_key = len(v.values())
         cand_weight = float(math.e ** (-abs(k))) * 1000
-        cand_weight = cand_weight / cands_per_key
-        cand_tup = (cand_weight, k, v)
+        max_t_freq = get_max_track_frequency(v)
+        cand_tup = (cand_weight + max_t_freq, k, v)
 
         weighted_candidates.append(cand_tup)
 
@@ -183,18 +197,9 @@ def align_matches_weighted(list_matches):
     return track, candidates
 
 
-def files_in_dir(dir_path):
-    """Returns all stored wavs"""
-    files = []
-
-    for (dirpath, dirname, filenames) in os.walk(dir_path):
-        files.append([dirpath, filenames])
-    return files
-
-
 #### bulk add ####
 def fingerprint_songs(reset_db=False, song_limit=None):
-    f = files_in_dir('C:\\Users\\Vlad\Documents\\thesis\\audioExtraction\\wavs')
+    f = export._get_dir_structure('C:\\Users\\Vlad\Documents\\thesis\\audioExtraction\\wavs')
 
     if reset_db:
         reset_database()
@@ -268,15 +273,13 @@ def clean_not_fgp():
 
 
 if __name__ == '__main__':
-
     test1 = 'C:\\Users\\Vlad\\Documents\\thesis\\audioExtraction\\wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Chris Skyes - The Black Sea\\SFX Medium Wave Splash on Rocks 12.wav'
-    sn, list_hash = fingerprint_worker('wavs/estring.wav',
-                                       limit=2)
+    sn, list_hash = fingerprint_worker(test1,
+                                       limit=4)
 
     matches = db.get_matches(list_hash)
 
     x, r = align_matches_weighted(matches)
     print(x)
-    print(r)
-    for _ in r:
-        print(_)
+    for itm in r:
+        print(itm)

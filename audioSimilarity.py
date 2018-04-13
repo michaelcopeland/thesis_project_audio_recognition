@@ -6,6 +6,7 @@ import fingerprintWorker as fw
 
 from scipy.signal import correlate2d, correlate
 from scipy.stats import pearsonr, linregress
+import exportData as export
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -139,7 +140,7 @@ def get_similarity(list_dir, grid_setup):
         fw.fgp_api.set_grid_attributes(tint, fint, ttol, ftol)
 
         for dir in list_dir:
-            paths = fw.files_in_dir('wavs')
+            paths = export._get_dir_structure('wavs')
 
             for tup in paths:
                 directory_name = tup[0]
@@ -176,13 +177,6 @@ if __name__=='__main__':
 
     get_similarity(list_paths, alternate_grid)
 
-    # TODO: make a dictionary of the folder structure
-    # folder -> [list of files]
-
-    # TODO: make addition of file frequency to the weight calculation in fingerprint align_matches_weighted
-
     # TODO: implement search for k nearest songs with minhash
 
     # TODO: save all of the minHash test files with these two grid setups
-
-    # TODO: test for wider grids than (150, 150), distinguish for larger tracks !!!

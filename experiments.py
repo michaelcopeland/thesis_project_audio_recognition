@@ -193,7 +193,7 @@ def run_exp3():
         print(result)
 
 def run_exp4_align_weighted():
-    limits = [1, 2, 4, 8]
+    limits = [1, 2, 4]
 
     num_tracks, track = fw.get_wavs_by_fgp(1)
 

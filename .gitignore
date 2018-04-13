@@ -65,3 +65,5 @@ wavs/*
 
 # ignore numpy
 *.npy
+
+exported_grids/*

@@ -78,6 +78,11 @@ def export_file(file_name, data, dest_dir=EXPORT_PATH):
 
 def load_grid(file_name, local_dir=EXPORT_PATH):
     path = local_dir + '\\' + file_name
+    filename, ext = os.path.splitext(path)
+
+    if ext != CUSTOM_EXT:
+        path = path[:-len(ext)] + CUSTOM_EXT
+
     with open(path, 'rb') as f:
         data = pickle.load(f)
 

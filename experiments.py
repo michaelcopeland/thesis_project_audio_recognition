@@ -1,6 +1,8 @@
 import fingerprintWorker as fw
 import matplotlib.pyplot as plt
 import exportData as export
+import audioSimilarity as sim
+
 
 RESULT_DICT = {
     'TP': 0,
@@ -28,62 +30,15 @@ def reset_result_dict():
         RESULT_DICT[key] = 0
 
 
-def exp(song, limit=None):
+def exp_with_weighted_align(song, limit=None):
     """Runs a query experiment
 
-    Attributes:
-        song - tuple (is_fgp, song name)
+        Attributes:
+            song - tuple (is_fgp, song name)
 
-    Return:
-        Dictionary of results
+        Return:
+            Dictionary of results
     """
-    dir_map = export.build_dir_map(export.root)
-
-    song_in_fgp_status = song[0]
-    song_in            = song[1]
-
-    directory = dir_map[song_in]
-
-    sn, list_hash = fw.fingerprint_worker(directory + '\\' + song_in, limit=limit)
-
-    matches = fw.db.get_matches(list_hash)
-
-    result_track, matched_fam = fw.align_matches(matches, family=True)
-
-    # result track name
-    r_t_name = result_track['song name']
-
-    # TP
-    if r_t_name == song_in:
-        RESULT_DICT['TP'] += 1
-    # TN
-    elif r_t_name == 'no_track' and song_in_fgp_status == 0:
-        RESULT_DICT['TN'] += 1
-    # FP
-    elif r_t_name != song_in and song_in_fgp_status == 1:
-        RESULT_DICT['FP'] += 1
-    # FN
-    elif r_t_name == 'no_track' and song_in_fgp_status == 1:
-        RESULT_DICT['FN'] += 1
-    # FA
-    elif r_t_name != song_in and song_in_fgp_status == 0:
-        RESULT_DICT['FA'] += 1
-
-    fam_hit = False
-    for k, v in matched_fam.items():
-        if song_in in v:
-            #print('hit! ', song, v)
-            fam_hit = True
-    if fam_hit:
-        RESULT_DICT['FAM_HIT'] += 1
-    else:
-        print('!!!!!!!!!!!!!\nSong in: {}\nValues: {}'.format(song_in, matched_fam.values()))
-
-    print('Querying {} --- {} s\nResult={}'.format(song_in, limit, result_track))
-    return RESULT_DICT
-
-
-def exp_with_weighted_align(song, limit=None):
     dir_map = export.build_dir_map(export.root)
 
     song_in_fgp_status = song[0]
@@ -94,7 +49,7 @@ def exp_with_weighted_align(song, limit=None):
 
     matches = fw.db.get_matches(list_hash)
 
-    result_track, matched_fam = fw.align_matches_weighted(matches)
+    result_track, matched_fam, _ = fw.align_matches_weighted(matches)
 
     # result track name
     r_t_name = result_track['song name']
@@ -138,7 +93,7 @@ def run_exp1():
     for track in test_tracks:
         for l in limits:
             track = [1, track]
-            exp(track, l)
+            exp_with_weighted_align(track, l)
 
 
 # REMEMEBER: send in the song's fingerprint status (0, 1) as a tuple (status, song)
@@ -155,7 +110,7 @@ def run_exp2():
         reset_result_dict()
         for t in track:
             t = [1, t]
-            result = exp(t, l)
+            result = exp_with_weighted_align(t, l)
         print('Limit: {} s'.format(l))
         print(result)
 
@@ -172,7 +127,7 @@ def run_exp3():
         reset_result_dict()
         for t in track:
             t = [1, t]
-            result = exp(t, l)
+            result = exp_with_weighted_align(t, l)
         print('Limit: {} s'.format(l))
         print(result)
 
@@ -194,21 +149,32 @@ def run_exp4_align_weighted():
         print(result)
 
 
-def exp_aligned_matches():
-    song_path = 'C:\\Users\\Vlad\Documents\\thesis\\audioExtraction\\wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Chris Skyes - The Black Sea\\AMBIENCE Huge Waves 2m Away From Impact Point 1.wav'
+def test_changes():
+    limit = [2, 4]
 
-    sn, list_hashes = fw.fingerprint_worker(song_path, limit=2)
+    result = None
+    for l in limit:
+        reset_result_dict()
+
+        for t in test_tracks:
+            t = [1, t]
+            result = exp_with_weighted_align(t, l)
+        print('Limit: {} s'.format(l))
+        print(result)
+
+
+def exp_aligned_matches():
+    song_path = 'wavs/Sonniss.com - GDC 2017 - Game Audio Bundle/Chris Skyes - The Black Sea/SFX Large Wave Splash on Rocks 21.wav'
+
+    sn, list_hashes = fw.fingerprint_worker(song_path, limit=4)
     print('Querying: {}'.format(sn))
 
     matches = fw.db.get_matches(list_hashes)
 
-    song, fam = fw.align_matches(matches, family=True)
+    song, fam_dict, cand = fw.align_matches_weighted(matches)
 
-    print('Most likely res = {}'.format(song))
-    print('Candidates:\n')
-    for k, v in fam.items():
-        print('Key {} -- Value {}'.format(k, v))
-
+    print('Most likely res = {}\n'.format(song))
+    sim.compute_sim(song['song name'], cand)
 
 def test_list_hash_colision_rate(test_track, limit=None):
     name, list_hash = fw.fingerprint_worker(test_track, limit)
@@ -238,4 +204,4 @@ def run_test_list_colision_rate():
 
 
 if __name__ == '__main__':
-    run_exp4_align_weighted()
+    exp_aligned_matches()

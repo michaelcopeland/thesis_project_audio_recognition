@@ -1,7 +1,6 @@
 """Stores audio information and allows to compute various similarity searches"""
 
 from datasketch import MinHash
-from fingerprint import Fingerprint
 import fingerprintWorker as fw
 
 from scipy.signal import correlate2d, correlate
@@ -107,19 +106,57 @@ class AudioSimilarity():
         plt.plot(wav1, wav2, '--b', wav1, '--r', wav2, alpha=0.75)
         plt.show()
 
-    def minHash(self, set1, set2):
-        m1, m2 = MinHash(), MinHash()
 
-        for d in set1:
-            m1.update(d.encode('utf8'))
-        for d in set2:
-            m2.update(d.encode('utf8'))
-        print("Estimated Jaccard: ", m1.jaccard(m2))
+def minHash(set1, set2):
+    m1, m2 = MinHash(), MinHash()
 
-        s1 = set(set1)
-        s2 = set(set2)
-        actual_jaccard = float(len(s1.intersection(s2))) / float(len(s1.union(s2)))
-        print("Actual Jaccard: ", actual_jaccard)
+    for d in set1:
+        m1.update(d.encode('utf8'))
+    for d in set2:
+        m2.update(d.encode('utf8'))
+
+    sim = m1.jaccard(m2)
+    #print("Estimated Jaccard: ", sim)
+
+    #s1 = set(set1)
+    #s2 = set(set2)
+    #actual_jaccard = float(len(s1.intersection(s2))) / float(len(s1.union(s2)))
+    #print("Actual Jaccard: ", actual_jaccard)
+
+    return sim
+
+def compute_sim(primary, candidates):
+    """Calculates Jaccard similarity of different audio tracks
+    It takes a primary track and minhashes it against other candidates
+
+    Attributes:
+        primary     - .grid file representing an audio track
+        candidates  - a list of matching files
+
+    Return:
+        res         - a list of songs with above 75% similarity
+    """
+    all_grids = export.build_dir_map(export.EXPORT_PATH)
+    prim_set = export.load_grid(primary)
+
+    # grids_to_load = set()
+    # for cand in candidates:
+    #     tup = cand[2].keys()
+    #
+    #     for sub_cand in tup:
+    #         grids_to_load.add(sub_cand)
+
+    # for grd in grids_to_load:
+    #     current = export.load_grid(grd)
+    #     s = minHash(prim_set, current)
+    #     if s > 0.75:
+    #         print(primary, grd, s)
+    for grd in all_grids.keys():
+        current = export.load_grid(grd)
+        s = minHash(prim_set, current)
+        if s > 0.75:
+            print(grd, primary, s)
+
 
 
 def get_similarity(list_dir, grid_setup):
@@ -130,8 +167,6 @@ def get_similarity(list_dir, grid_setup):
         list_dir   - a list of directories in which to look for songs
         grid_setup - a list of grid setup values ie (50, 50, 20, 20)
     """
-    a = AudioSimilarity()
-
     for stp in grid_setup:
         tint = stp[0]
         fint = stp[1]
@@ -155,7 +190,7 @@ def get_similarity(list_dir, grid_setup):
                             secondary_set = fw.fingerprint_worker(dir + '\\' + _f, grid_only=True)
 
                             print('{} <> {}'.format(primary_file, _f))
-                            a.minHash(primary_set, secondary_set)
+                            minHash(primary_set, secondary_set)
 
 
 if __name__=='__main__':
@@ -177,6 +212,3 @@ if __name__=='__main__':
 
     get_similarity(list_paths, alternate_grid)
 
-    # TODO: implement search for k nearest songs with minhash
-
-    # TODO: save all of the minHash test files with these two grid setups

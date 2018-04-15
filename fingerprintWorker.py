@@ -197,7 +197,7 @@ def align_matches_weighted(list_matches):
         'song name': ret_name,
         'is fingerprinted': int(is_fng),
     }
-    return track, candidates
+    return track, candidates, res
 
 
 def fingerprint_songs(reset_db=False, song_limit=None):
@@ -264,7 +264,7 @@ def get_wavs_by_fgp(is_fgp=0):
 
 
 if __name__ == '__main__':
-    fingerprint_songs(song_limit=2)
+    fingerprint_songs(song_limit=5)
     # test1 = 'C:\\Users\\Vlad\\Documents\\thesis\\audioExtraction\\wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Chris Skyes - The Black Sea\\SFX Medium Wave Splash on Rocks 12.wav'
     # sn, list_hash = fingerprint_worker(test1,
     #                                    limit=4)

@@ -98,6 +98,7 @@ class AudioHelper():
         self.p.terminate()
         print('playback done')
 
+
 def retrieve_audio(wave_file, limit=None):
     """Retrieves audio information from sound file using PySoundFile.
 

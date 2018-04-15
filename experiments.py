@@ -1,5 +1,6 @@
 import fingerprintWorker as fw
 import matplotlib.pyplot as plt
+import exportData as export
 
 RESULT_DICT = {
     'TP': 0,
@@ -10,152 +11,135 @@ RESULT_DICT = {
     'FAM_HIT': 0
 }
 
+test_tracks = ['01.wav',
+               'aic.wav',
+               'birds_outside_002_wide.wav',
+               'busy_dining_room_002.wav',
+               'madrid_food_market_busy_001.wav',
+               'rain_umbrella_001_wide.wav',
+               '50s_elevator_ride_down_001.wav',
+               'elevator_mechanism_002_wide.wav',
+               'elevator_mechanism_005_wide.wav',
+               'soviet_elevator_door_close_001.wav']
+
 
 def reset_result_dict():
     for key in RESULT_DICT.keys():
         RESULT_DICT[key] = 0
 
+
 def exp(song, limit=None):
     """Runs a query experiment
 
     Attributes:
-        song  - tuple [0, song] or [1, song]; 0,1 = is_fingerprinted
-        limit - how much of the song are we listening to
+        song - tuple (is_fgp, song name)
 
     Return:
         Dictionary of results
     """
-    all_files = fw.files_in_dir('C:\\Users\\Vlad\Documents\\thesis\\audioExtraction\\wavs')
+    dir_map = export.build_dir_map(export.root)
 
     song_in_fgp_status = song[0]
-    song_in           = song[1]
+    song_in            = song[1]
 
-    # directory = ''
-    # files_in_dir = []
-    result_track = ''
+    directory = dir_map[song_in]
 
-    for tup in all_files:
-        directory = tup[0]
-        files_in_dir = tup[1]
+    sn, list_hash = fw.fingerprint_worker(directory + '\\' + song_in, limit=limit)
 
-        for track in files_in_dir:
-            # ensure we get the wrong song
-            if track == song_in:
-                sn, list_hash = fw.fingerprint_worker(directory + '\\' + track, limit=limit)
+    matches = fw.db.get_matches(list_hash)
 
-                matches = fw.db.get_matches(list_hash)
+    result_track, matched_fam = fw.align_matches(matches, family=True)
 
-                result_track, matched_fam = fw.align_matches(matches, family=True)
+    # result track name
+    r_t_name = result_track['song name']
 
-                # result track name
-                r_t_name = result_track['song name']
+    # TP
+    if r_t_name == song_in:
+        RESULT_DICT['TP'] += 1
+    # TN
+    elif r_t_name == 'no_track' and song_in_fgp_status == 0:
+        RESULT_DICT['TN'] += 1
+    # FP
+    elif r_t_name != song_in and song_in_fgp_status == 1:
+        RESULT_DICT['FP'] += 1
+    # FN
+    elif r_t_name == 'no_track' and song_in_fgp_status == 1:
+        RESULT_DICT['FN'] += 1
+    # FA
+    elif r_t_name != song_in and song_in_fgp_status == 0:
+        RESULT_DICT['FA'] += 1
 
-                # TP
-                if r_t_name == song_in:
-                    RESULT_DICT['TP'] += 1
-                # TN
-                elif r_t_name == 'no_track' and song_in_fgp_status == 0:
-                    RESULT_DICT['TN'] += 1
-                # FP
-                elif r_t_name != song_in and song_in_fgp_status == 1:
-                    RESULT_DICT['FP'] += 1
-                # FN
-                elif r_t_name == 'no_track' and song_in_fgp_status == 1:
-                    RESULT_DICT['FN'] += 1
-                # FA
-                elif r_t_name != song_in and song_in_fgp_status == 0:
-                    RESULT_DICT['FA'] += 1
-
-                fam_hit = False
-                for k, v in matched_fam.items():
-                    if song_in in v:
-                        #print('hit! ', song, v)
-                        fam_hit = True
-                if fam_hit:
-                    RESULT_DICT['FAM_HIT'] += 1
-                else:
-                    print('!!!!!!!!!!!!!\nSong in: {}\nValues: {}'.format(song_in, matched_fam.values()))
+    fam_hit = False
+    for k, v in matched_fam.items():
+        if song_in in v:
+            #print('hit! ', song, v)
+            fam_hit = True
+    if fam_hit:
+        RESULT_DICT['FAM_HIT'] += 1
+    else:
+        print('!!!!!!!!!!!!!\nSong in: {}\nValues: {}'.format(song_in, matched_fam.values()))
 
     print('Querying {} --- {} s\nResult={}'.format(song_in, limit, result_track))
     return RESULT_DICT
 
 
 def exp_with_weighted_align(song, limit=None):
-    all_files = fw.files_in_dir('C:\\Users\\Vlad\Documents\\thesis\\audioExtraction\\wavs')
+    dir_map = export.build_dir_map(export.root)
 
     song_in_fgp_status = song[0]
     song_in = song[1]
+    directory = dir_map[song_in]
 
-    result_track = ''
+    sn, list_hash = fw.fingerprint_worker(directory + '\\' + song_in, limit=limit)
 
-    for tup in all_files:
-        directory = tup[0]
-        files_in_dir = tup[1]
+    matches = fw.db.get_matches(list_hash)
 
-        for track in files_in_dir:
-            # ensure we get the wrong song
-            if track == song_in:
-                sn, list_hash = fw.fingerprint_worker(directory + '\\' + track, limit=limit)
+    result_track, matched_fam = fw.align_matches_weighted(matches)
 
-                matches = fw.db.get_matches(list_hash)
+    # result track name
+    r_t_name = result_track['song name']
 
-                result_track, matched_fam = fw.align_matches_weighted(matches)
+    # TP
+    if r_t_name == song_in:
+        RESULT_DICT['TP'] += 1
+    # TN
+    elif r_t_name == 'no_track' and song_in_fgp_status == 0:
+        RESULT_DICT['TN'] += 1
+    # FP
+    elif r_t_name != song_in and song_in_fgp_status == 1:
+        RESULT_DICT['FP'] += 1
+    # FN
+    elif r_t_name == 'no_track' and song_in_fgp_status == 1:
+        RESULT_DICT['FN'] += 1
+    # FA
+    elif r_t_name != song_in and song_in_fgp_status == 0:
+        RESULT_DICT['FA'] += 1
 
-                # result track name
-                r_t_name = result_track['song name']
-
-                # TP
-                if r_t_name == song_in:
-                    RESULT_DICT['TP'] += 1
-                # TN
-                elif r_t_name == 'no_track' and song_in_fgp_status == 0:
-                    RESULT_DICT['TN'] += 1
-                # FP
-                elif r_t_name != song_in and song_in_fgp_status == 1:
-                    RESULT_DICT['FP'] += 1
-                # FN
-                elif r_t_name == 'no_track' and song_in_fgp_status == 1:
-                    RESULT_DICT['FN'] += 1
-                # FA
-                elif r_t_name != song_in and song_in_fgp_status == 0:
-                    RESULT_DICT['FA'] += 1
-
-                fam_hit = False
-                for k, v in matched_fam.items():
-                    if song_in in v:
-                        # print('hit! ', song, v)
-                        fam_hit = True
-                if fam_hit:
-                    RESULT_DICT['FAM_HIT'] += 1
-                else:
-                    print('!!!!!!!!!!!!!\nSong in: {}\nValues: {}'.format(song_in, matched_fam.values()))
+    fam_hit = False
+    for k, v in matched_fam.items():
+        if song_in in v:
+            # print('hit! ', song, v)
+            fam_hit = True
+    if fam_hit:
+        RESULT_DICT['FAM_HIT'] += 1
+    else:
+        print('!!!!!!!!!!!!!\nSong in: {}\nValues: {}'.format(song_in, matched_fam.values()))
 
     print('Querying {} --- {} s\nResult={}'.format(song_in, limit, result_track))
     return RESULT_DICT
 
 
-tracks_for_exp_1 = ['01.wav',
-                    'aic.wav',
-                    'birds_outside_002_wide.wav',
-                    'busy_dining_room_002.wav',
-                    'madrid_food_market_busy_001.wav',
-                    'rain_umbrella_001_wide.wav',
-                    '50s_elevator_ride_down_001.wav',
-                    'elevator_mechanism_002_wide.wav',
-                    'elevator_mechanism_005_wide.wav',
-                    'soviet_elevator_door_close_001.wav']
-
 # REMEMEBER: send in the song's fingerprint status (0, 1) as a tuple (status, song)
-
 def run_exp1():
     limits = [1, 2, 4, 8]
     # test_track = 'rain_umbrella_001_wide.wav'
     # exp_1(test_track, limit)
 
-    for track in tracks_for_exp_1:
+    for track in test_tracks:
         for l in limits:
             track = [1, track]
             exp(track, l)
+
 
 # REMEMEBER: send in the song's fingerprint status (0, 1) as a tuple (status, song)
 def run_exp2():
@@ -192,8 +176,9 @@ def run_exp3():
         print('Limit: {} s'.format(l))
         print(result)
 
+
 def run_exp4_align_weighted():
-    limits = [1, 2, 4]
+    limits = [1, 2, 4, 8]
 
     num_tracks, track = fw.get_wavs_by_fgp(1)
 
@@ -207,6 +192,7 @@ def run_exp4_align_weighted():
             result = exp_with_weighted_align(t, l)
         print('Limit: {} s'.format(l))
         print(result)
+
 
 def exp_aligned_matches():
     song_path = 'C:\\Users\\Vlad\Documents\\thesis\\audioExtraction\\wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Chris Skyes - The Black Sea\\AMBIENCE Huge Waves 2m Away From Impact Point 1.wav'
@@ -223,9 +209,11 @@ def exp_aligned_matches():
     for k, v in fam.items():
         print('Key {} -- Value {}'.format(k, v))
 
+
 def test_list_hash_colision_rate(test_track, limit=None):
     name, list_hash = fw.fingerprint_worker(test_track, limit)
     return list_hash
+
 
 def run_test_list_colision_rate():
     test_track = 'C:\\Users\\Vlad\\Documents\\thesis\\audioExtraction\\wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Articulated Sounds - Quiet Streets\\QUIET STREET Back alley, people chatting, ST.wav'

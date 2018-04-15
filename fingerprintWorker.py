@@ -21,6 +21,7 @@ def has_valid_extension(path_to_file):
     return False
 
 
+# deprecated
 def retrieve_unfiltered_peaks(filename, limit=None):
     print('Retrieving peaks for ', filename)
     channel_amount, frame_rate, channels = hlp.retrieve_audio(filename, limit)
@@ -32,6 +33,7 @@ def retrieve_unfiltered_peaks(filename, limit=None):
     return peaks
 
 
+# TODO: fix issue where program crashes if audio file is corrupted
 def fingerprint_worker(file_path, limit=None, grid_only=False):
     #st = time.time()
     song_name, extension = os.path.splitext(file_path)
@@ -45,8 +47,7 @@ def fingerprint_worker(file_path, limit=None, grid_only=False):
         hashes = fgp_api.fingerprint(channel, frame_rate=frame_rate)
 
         if grid_only:
-            grid_points = fgp_api.fingerprint(channel, frame_rate=frame_rate, grid_only=grid_only)
-            return grid_points
+            return fgp_api.fingerprint(channel, frame_rate=frame_rate, grid_only=grid_only)
 
         result |= set(hashes)
 
@@ -62,6 +63,7 @@ def reset_database():
     db.setup()
 
 
+# TODO: write SQL statement to speed up the hash insertions
 def insert_wav_to_db(song_n):
     #db.connect()
     song_name, list_hash = fingerprint_worker(song_n, limit=None)
@@ -75,6 +77,7 @@ def insert_wav_to_db(song_n):
         db.insert_fingerprint(h[0], song_name, h[1])
 
 
+# deprecated
 def align_matches(list_matches, family=False):
     """picks the most likely correct song by doing a frequency count over the results"""
     diff_counter = dict()
@@ -163,7 +166,7 @@ def align_matches_weighted(list_matches):
         weighted_candidates.append(cand_tup)
 
     weighted_candidates = sorted(weighted_candidates, key=lambda weight: weight[0])
-    res = [x for x in weighted_candidates if x[0] > 0.0]
+    res = [elem for elem in weighted_candidates if elem[0] > 0.0]
 
     if len(res) == 0:
         return {'song id': 0,
@@ -197,9 +200,8 @@ def align_matches_weighted(list_matches):
     return track, candidates
 
 
-#### bulk add ####
 def fingerprint_songs(reset_db=False, song_limit=None):
-    f = export._get_dir_structure('C:\\Users\\Vlad\Documents\\thesis\\audioExtraction\\wavs')
+    dir_structure = export.build_dir_map(export.root)
 
     if reset_db:
         reset_database()
@@ -211,42 +213,39 @@ def fingerprint_songs(reset_db=False, song_limit=None):
 
     song_counter = 0
 
-    # go through each directory
-    for tup in f:
-        current_dir = tup[0]
-        file_in_cd = tup[1]
+    # go through each file in the directory
+    for file in dir_structure.keys():
+        # don't re-fingerprint files
+        if file in already_fingerprinted:
+            print('Skipping: {}'.format(file))
+            continue
 
-        # go through each file in the directory
-        for file in file_in_cd:
-            # don't re-fingerprint files
-            if file in already_fingerprinted:
-                print('Skipping: {}'.format(file))
-                continue
+        if song_counter == song_limit:
+            print('Added {} tracks to database.'.format(song_counter))
+            db.connection.close()
+            return
 
-            if song_counter == song_limit:
-                print('Added {} tracks to database.'.format(song_counter))
-                db.connection.close()
-                return
+        # path of dir + actual file
+        path = dir_structure[file] + '\\' + file
 
-            path = current_dir + '\\' + file
+        # avoid invalid extensions
+        ext = file.split(".")[-1].lower()
+        if ext in INVALID_EXT:
+            continue
 
-            # avoid invalid extensions
-            ext = file.split(".")[-1].lower()
-            if ext in INVALID_EXT:
-                continue
+        # insert song returns true if it managed, false otherwise
+        res = db.insert_song(file, 1)
+        if res:
+            song_counter += 1
 
-            # insert song returns true if it managed, false otherwise
-            res = db.insert_song(file, 1)
-            if res:
-                song_counter += 1
-
-                # generate and insert hashes
-                _, list_hashes = fingerprint_worker(path)
-                for h in list_hashes:
-                    db.insert_fingerprint(h[0], file, h[1])
-            else:
-                print('Fingerprinting skipped')
-                continue
+            # generate and insert hashes
+            _, list_hashes = fingerprint_worker(path)
+            for h in list_hashes:
+                # TODO: bulk add hashes!
+                db.insert_fingerprint(h[0], file, h[1])
+        else:
+            print('Fingerprinting skipped')
+            continue
 
     print('Number of wavs: ', song_counter)
 
@@ -258,28 +257,21 @@ def get_wavs_by_fgp(is_fgp=0):
     for elem in res:
         temp = str(elem)[2:-3]
         clean_list.append(temp)
-    print(clean_list)
+    # print(clean_list)
 
     number_of_tracks = len(clean_list)
     return number_of_tracks, clean_list
 
 
-def clean_not_fgp():
-    # remove fingerprints + songs marked as not fingerprinted
-    #not_fingerprinted = get_wavs_by_fgp(0)
-    last_fingerprinted = ['DAYTIME, JUNCTION WITH BUSY TRAFFIC, CARS, MOTORBIKES, TRUCKS, HORNING, PEOPLE ON THE STREET, BIG CITY LIFE, BOMBAY, MUMBAI_INCREDIBLE_INDIA_VOL_II_14.WAV']
-    db.delete_fgp_by_song(last_fingerprinted)
-    db.delete_songs(last_fingerprinted)
-
-
 if __name__ == '__main__':
-    test1 = 'C:\\Users\\Vlad\\Documents\\thesis\\audioExtraction\\wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Chris Skyes - The Black Sea\\SFX Medium Wave Splash on Rocks 12.wav'
-    sn, list_hash = fingerprint_worker(test1,
-                                       limit=4)
-
-    matches = db.get_matches(list_hash)
-
-    x, r = align_matches_weighted(matches)
-    print(x)
-    for itm in r:
-        print(itm)
+    fingerprint_songs(song_limit=2)
+    # test1 = 'C:\\Users\\Vlad\\Documents\\thesis\\audioExtraction\\wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Chris Skyes - The Black Sea\\SFX Medium Wave Splash on Rocks 12.wav'
+    # sn, list_hash = fingerprint_worker(test1,
+    #                                    limit=4)
+    #
+    # matches = db.get_matches(list_hash)
+    #
+    # x, r = align_matches_weighted(matches)
+    # print(x)
+    # for itm in r:
+    #     print(itm)

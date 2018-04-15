@@ -61,24 +61,11 @@ FINGERPRINT_REDUCTION = 20
 class Fingerprint:
 
     def __init__(self):
-        self.amps = None
-        self.freq = None
-        self.time = None
-
         self.TIME_INTERVAL = 50
         self.FREQ_INTERVAL = 50
 
         self.TIME_TOLERANCE = 20
         self.FREQ_TOLERANCE = 20
-
-    def set_data(self, freq, time, amps):
-        self.freq = freq
-        self.time = time
-        self.amps = amps
-
-    def get_unfiltered_data(self):
-        peaks = zip(self.freq, self.time, self.amps)
-        return list(peaks)
 
     def set_grid_attributes(self, t_int, f_int, t_tol, f_tol):
         """Set custom grid"""
@@ -148,8 +135,8 @@ class Fingerprint:
         amps = amps.flatten()
 
         # stores information in a dictionary // used by audio similarity
-        if store_data:
-            self.set_data(i, j, amps)
+        # if store_data:
+        #     self.set_data(i, j, amps)
 
         peaks = zip(i, j, amps)  # freq, time, amp
 

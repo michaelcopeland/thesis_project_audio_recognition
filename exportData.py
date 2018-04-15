@@ -6,8 +6,9 @@ import os
 EXPORT_PATH = 'C:\\Users\\Vlad\\Documents\\thesis\\audioExtraction\\exported_grids'
 root        = 'C:\\Users\\Vlad\Documents\\thesis\\audioExtraction\\wavs'
 
+
 ##### supported audio encodings #####
-VALID_EXT   = ['.wav', '.ogg', '.mp3', '.flac']
+VALID_EXT   = ['.wav', '.ogg', '.mp3', '.flac', '.grid']
 CUSTOM_EXT  = '.grid'
 
 
@@ -85,15 +86,19 @@ def load_grid(file_name, local_dir=EXPORT_PATH):
 
 if __name__=='__main__':
     m = build_dir_map(root)
+    alread_done = build_dir_map(EXPORT_PATH)
+
     fw.fgp_api.set_grid_attributes(150, 150, 60, 60)
 
     for k in m.keys():
-        _file_name = k
-        _path      = m[_file_name] + '\\' + _file_name
-        if has_valid_extension(_path):
-            data = fw.fingerprint_worker(_path, grid_only=True)
+        grd_k = k[:-4] + '.grid'
+        if grd_k not in alread_done.keys():
+            _file_name = k
+            _path      = m[_file_name] + '\\' + _file_name
+            if has_valid_extension(_path):
+                # print(_file_name, _path)
+                data = fw.fingerprint_worker(_path, grid_only=True)
 
-            export_file(_file_name, data, dest_dir=EXPORT_PATH)
-
-
-# TODO: write script to not export grids that were already procesed
+                export_file(_file_name, data, dest_dir=EXPORT_PATH)
+        else:
+            print('Skipped: {}'.format(k))

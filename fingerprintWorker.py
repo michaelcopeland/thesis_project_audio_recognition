@@ -63,7 +63,6 @@ def reset_database():
     db.setup()
 
 
-# TODO: write SQL statement to speed up the hash insertions
 def insert_wav_to_db(song_n):
     #db.connect()
     song_name, list_hash = fingerprint_worker(song_n, limit=None)
@@ -201,7 +200,7 @@ def align_matches_weighted(list_matches):
 
 
 def fingerprint_songs(reset_db=False, song_limit=None):
-    dir_structure = export.build_dir_map(export.root)
+    dir_structure = export.build_dir_map(export.exteral_root)
 
     if reset_db:
         reset_database()
@@ -240,9 +239,16 @@ def fingerprint_songs(reset_db=False, song_limit=None):
 
             # generate and insert hashes
             _, list_hashes = fingerprint_worker(path)
+            formatted_list = []
             for h in list_hashes:
-                # TODO: bulk add hashes!
-                db.insert_fingerprint(h[0], file, h[1])
+                formatted_list.append((h[0], file, h[1]))
+            res = db.dump_fingerprints(formatted_list)
+
+            # stop everything in case of failure
+            if not res:
+                db.delete_songs(file)
+                print('Fingerprinting failed for: {}'.format([file]))
+                return
         else:
             print('Fingerprinting skipped')
             continue
@@ -264,7 +270,7 @@ def get_wavs_by_fgp(is_fgp=0):
 
 
 if __name__ == '__main__':
-    fingerprint_songs(song_limit=5)
+    fingerprint_songs(song_limit=9)
     # test1 = 'C:\\Users\\Vlad\\Documents\\thesis\\audioExtraction\\wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Chris Skyes - The Black Sea\\SFX Medium Wave Splash on Rocks 12.wav'
     # sn, list_hash = fingerprint_worker(test1,
     #                                    limit=4)

@@ -164,7 +164,7 @@ def test_changes():
 
 
 def exp_aligned_matches():
-    song_path = 'wavs/Sonniss.com - GDC 2017 - Game Audio Bundle/Chris Skyes - The Black Sea/SFX Large Wave Splash on Rocks 21.wav'
+    song_path = export.db_test + '\\' + 'c1.wav'
 
     sn, list_hashes = fw.fingerprint_worker(song_path, limit=4)
     print('Querying: {}'.format(sn))
@@ -175,6 +175,7 @@ def exp_aligned_matches():
 
     print('Most likely res = {}\n'.format(song))
     sim.compute_sim(song['song name'], cand)
+
 
 def test_list_hash_colision_rate(test_track, limit=None):
     name, list_hash = fw.fingerprint_worker(test_track, limit)

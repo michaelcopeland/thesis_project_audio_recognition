@@ -79,6 +79,13 @@ INSERT_FINGERPRINT = 'INSERT INTO {}({},{},{}) VALUES (\'%s\', \'%s\', \'%s\');'
                                                                                         FINGERPRINT_FIELD_HASHKEY,
                                                                                         FINGERPRINT_FIELD_SONGNAME,
                                                                                         FINGERPRINT_FIELD_TIMEOFFSET)
+
+INSERT_FINGERPRINT_DUMP = 'INSERT INTO {}({}, {}, {}) VALUES %s;'.format(FINGERPRINTS_TABLE,
+                                                                         FINGERPRINT_FIELD_HASHKEY,
+                                                                         FINGERPRINT_FIELD_SONGNAME,
+                                                                         FINGERPRINT_FIELD_TIMEOFFSET)
+
+
 ###### SELECT STATEMENTS #####
 
 
@@ -168,6 +175,28 @@ def insert_fingerprint(hashkey, song_name, time_offset):
     except:
         connection.rollback()
 
+
+def dump_fingerprints(formatted_list):
+    """Receives a list of values to insert to the database
+    A value has the hashkey, name of song, time offset
+    """
+    dump_insert = INSERT_FINGERPRINT_DUMP
+
+    num_elem = len(formatted_list)
+    dump_insert = dump_insert % ', '.join(['%s'] * num_elem)
+
+    try:
+        connection.ping()
+        cur.execute(dump_insert, formatted_list)
+        connection.commit()
+    #print('dump successful!')
+        return True
+    except:
+        connection.rollback()
+        print('Dumping fingerprints failed')
+        return False
+
+
 def delete_fgp_by_song(list_song_n):
     """Deletes fingerprints for each song in the parameter list of song
 
@@ -191,6 +220,7 @@ def delete_fgp_by_song(list_song_n):
 
     else:
         print('Deletion failed: no songs in list')
+
 
 def delete_songs(list_song_n):
     songs = ', '.join(str('\'' + x + '\'') for x in list_song_n)
@@ -286,6 +316,7 @@ def get_song_by_name(song_name):
 
     return False, song_id, song_name, is_fingerprinted
 
+
 def query_all_fingerprints():
     """
     Returns song name, hash key, time offset
@@ -332,7 +363,6 @@ def get_matches(list_of_hashes):
     values = list(filter(None, values))
     values = list(values)
     num_query = len(values)
-
     query_matches = SELECT_MULTIPLE
 
     # ensure there is something in the query (otherwise it crashes)
@@ -350,9 +380,12 @@ def get_matches(list_of_hashes):
         # print('result: ', hash_k, song_name, time_offset)
         yield (song_name, time_offset - map[hash_k])
 
+
 # REMEMBER TO CREATE THE DATABASE WITH MYSQL!!!
 connection = connect()
 cur = connection.cursor()
+# if anything fails it's dump_fingerprints due to buffer memory size
+cur.execute('set global max_allowed_packet=67108864')
 
 if __name__=='__main__':
-    get_songs_by_fgp_status(1)
+    pass

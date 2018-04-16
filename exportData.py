@@ -4,7 +4,9 @@ import pickle
 import os
 
 EXPORT_PATH = 'C:\\Users\\Vlad\\Documents\\thesis\\audioExtraction\\exported_grids'
-root        = 'C:\\Users\\Vlad\Documents\\thesis\\audioExtraction\\wavs'
+old_root        = 'C:\\Users\\Vlad\Documents\\thesis\\audioExtraction\\wavs'
+exteral_root    = 'D:\\thesis-data'
+db_test         = 'D:\\db_test'
 
 
 ##### supported audio encodings #####
@@ -90,7 +92,7 @@ def load_grid(file_name, local_dir=EXPORT_PATH):
 
 
 if __name__=='__main__':
-    m = build_dir_map(root)
+    m = build_dir_map(exteral_root)
     alread_done = build_dir_map(EXPORT_PATH)
 
     fw.fgp_api.set_grid_attributes(150, 150, 60, 60)

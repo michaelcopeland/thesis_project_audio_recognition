@@ -7,10 +7,12 @@ EXPORT_PATH = 'C:\\Users\\Vlad\\Documents\\thesis\\audioExtraction\\exported_gri
 old_root        = 'C:\\Users\\Vlad\Documents\\thesis\\audioExtraction\\wavs'
 exteral_root    = 'D:\\thesis-data'
 db_test         = 'D:\\db_test'
+mp3_test        = 'C:\\Users\\Vlad\Documents\\thesis\\audioExtraction\\mp3_test'
+flac_test       = 'C:\\Users\\Vlad\Documents\\thesis\\audioExtraction\\flac_test'
 
 
 ##### supported audio encodings #####
-VALID_EXT   = ['.wav', '.ogg', '.mp3', '.flac', '.grid']
+VALID_EXT   = ['.wav', '.ogg', '.mp3', '.flac', '.grid', '.mpeg']
 CUSTOM_EXT  = '.grid'
 
 

@@ -39,17 +39,21 @@ def exp_with_weighted_align(song, limit=None):
         Return:
             Dictionary of results
     """
-    dir_map = export.build_dir_map(export.root)
+    dir_map = export.build_dir_map(export.exteral_root)
 
     song_in_fgp_status = song[0]
     song_in = song[1]
-    directory = dir_map[song_in]
+    if song_in in dir_map:
+        directory = dir_map[song_in]
+    else:
+        print(song_in, ' missing')
+        return
 
     sn, list_hash = fw.fingerprint_worker(directory + '\\' + song_in, limit=limit)
 
     matches = fw.db.get_matches(list_hash)
 
-    result_track, matched_fam, _ = fw.align_matches_weighted(matches)
+    result_track, matched_fam, res = fw.align_matches_weighted(matches)
 
     # result track name
     r_t_name = result_track['song name']
@@ -205,4 +209,5 @@ def run_test_list_colision_rate():
 
 
 if __name__ == '__main__':
-    exp_aligned_matches()
+    #exp_aligned_matches()
+    run_exp4_align_weighted()

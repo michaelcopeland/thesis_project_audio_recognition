@@ -11,7 +11,7 @@ import math
 
 fgp_api = Fingerprint()
 INVALID_EXT = ['pdf', 'txt', 'jpg', 'wav.alt', 'csv', 'xlsx', 'alt']
-VALID_EXT   = ['.wav', 'ogg', 'mp3', 'flac']
+VALID_EXT   = ['.wav', '.ogg', '.mp3', '.flac', '.mpeg']
 
 
 def has_valid_extension(path_to_file):
@@ -170,7 +170,7 @@ def align_matches_weighted(list_matches):
     if len(res) == 0:
         return {'song id': 0,
         'song name': 'no_track',
-        'is fingerprinted': 0}, candidates
+        'is fingerprinted': 0}, candidates, res
 
     prime_candidate = res[-1]
     max_count = 0
@@ -200,7 +200,7 @@ def align_matches_weighted(list_matches):
 
 
 def fingerprint_songs(reset_db=False, song_limit=None):
-    dir_structure = export.build_dir_map(export.exteral_root)
+    dir_structure = export.build_dir_map(export.flac_test)
 
     if reset_db:
         reset_database()
@@ -270,7 +270,7 @@ def get_wavs_by_fgp(is_fgp=0):
 
 
 if __name__ == '__main__':
-    fingerprint_songs(song_limit=9)
+    fingerprint_songs(song_limit=1)
     # test1 = 'C:\\Users\\Vlad\\Documents\\thesis\\audioExtraction\\wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Chris Skyes - The Black Sea\\SFX Medium Wave Splash on Rocks 12.wav'
     # sn, list_hash = fingerprint_worker(test1,
     #                                    limit=4)

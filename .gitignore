@@ -67,3 +67,5 @@ wavs/*
 *.npy
 
 exported_grids/*
+flac_test/*
+mp3_test/*

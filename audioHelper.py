@@ -98,12 +98,13 @@ class AudioHelper():
         self.p.terminate()
         print('playback done')
 
+# TODO: implement pydub audio retriever in case of mp3 files!!! [OPTIONAL]
 
 def retrieve_audio(wave_file, limit=None):
     """Retrieves audio information from sound file using PySoundFile.
 
     Attributes:
-        wave_file - path to the audio file (supports OGG, MP3, FLAC, MAT, etc.)
+        wave_file - path to the audio file (supports OGG, FLAC, MAT, wave, etc.)
         limit     - how many seconds to play from the audio
 
     Return:

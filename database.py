@@ -2,17 +2,20 @@
 
 import MySQLdb as mysql
 
-FINGERPRINTS_TABLE = 'fingerprints'
-SONGS_TABLE = 'songs'
+DATABASE_NAME               = 'audioExtraction'
+TEST_DATABASE               = 'test_audio'
 
-FINGERPRINT_FIELD_ID = 'id'
-FINGERPRINT_FIELD_HASHKEY = 'hash_key'
-FINGERPRINT_FIELD_SONGNAME = 'song_name'
-FINGERPRINT_FIELD_TIMEOFFSET = 'time_offset'
+FINGERPRINTS_TABLE          = 'fingerprints'
+SONGS_TABLE                 = 'songs'
 
-SONGS_FIELD_SONG_ID = 'song_id'
-SONGS_FIELD_SONG_NAME = 'song_name'
-SONGS_FIELD_FINGERPRINTED = 'is_fingerprinted'
+FINGERPRINT_FIELD_ID        = 'id'
+FINGERPRINT_FIELD_HASHKEY   = 'hash_key'
+FINGERPRINT_FIELD_SONGNAME  = 'song_name'
+FINGERPRINT_FIELD_TIMEOFFSET= 'time_offset'
+
+SONGS_FIELD_SONG_ID         = 'song_id'
+SONGS_FIELD_SONG_NAME       = 'song_name'
+SONGS_FIELD_FINGERPRINTED   = 'is_fingerprinted'
 
 
 def connect():
@@ -21,7 +24,7 @@ def connect():
         port=3306,
         user='root',
         passwd='iamfuzzy222',
-        db='audioExtraction'
+        db=DATABASE_NAME
     )
     print('Connected to database!')
     return db

@@ -24,6 +24,21 @@ test_tracks = ['01.wav',
                'elevator_mechanism_005_wide.wav',
                'soviet_elevator_door_close_001.wav']
 
+mp3_test_tracks = [
+'01. Hells Bells.mp3',
+'02. Shoot To Thrill.mp3',
+'03. What Do You Do For Money Honey.mp3',
+'05. Let Me Put My Love Into You.mp3',
+'06. Back In Black.mp3',
+'07. You Shook Me All Night Long.mp3',
+'08. Have A Drink On Me.mp3',
+'09. Shake A Leg.mp3',
+'01. Hard As A Rock.mp3',
+'02. Cover You In Oil.mp3',
+'04. Givin The Dog A Bone.mp3',
+'10. Rock And Roll Aint Noise Pollution.mp3',
+]
+
 
 def reset_result_dict():
     for key in RESULT_DICT.keys():
@@ -139,14 +154,14 @@ def run_exp3():
 def run_exp4_align_weighted():
     limits = [1, 2, 4, 8]
 
-    num_tracks, track = fw.get_wavs_by_fgp(1)
+    #num_tracks, track = fw.get_wavs_by_fgp(1)
 
     result = None
     for l in limits:
 
         # reset the result dictionary for different limits
         reset_result_dict()
-        for t in track:
+        for t in mp3_test_tracks:
             t = [1, t]
             result = exp_with_weighted_align(t, l)
         print('Limit: {} s'.format(l))

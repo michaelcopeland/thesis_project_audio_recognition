@@ -194,21 +194,24 @@ def get_similarity(list_dir, grid_setup):
 
 
 if __name__=='__main__':
-    list_paths=['wavs\\c',
-                'wavs\\river',
-                'wavs\\estring',
-                'wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Alexander Ahura -  Groats Part1',
-                'wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Bluezone Corporation - War Zone (Designed Explosions)',
-                'wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Bluezone Corporation - Titanium - Cinematic Trailer Samples',
-                'wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Borg Sound - Harley Davidson Sportster Iron 883',
-                'wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Borg Sound - Gym weights']
-
-    list_grid_setup = [(100, 100, 30, 30),
-                       (150, 150, 60, 60)]
-
-    alternate_grid = [(150, 150, 60, 60),
-                      (200, 200, 70, 70),  # too high, but acceptable results
-                      (250, 250, 80, 80)]  # seems to cap
-
-    get_similarity(list_paths, alternate_grid)
+    compute_sim('08. Have A Drink On Me.grid', None)
+    # list_paths=['wavs\\c',
+    #             'wavs\\river',
+    #             'wavs\\estring',
+    #             'wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Alexander Ahura -  Groats Part1',
+    #             'wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Bluezone Corporation - War Zone (Designed Explosions)',
+    #             'wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Bluezone Corporation - Titanium - Cinematic Trailer Samples',
+    #             'wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Borg Sound - Harley Davidson Sportster Iron 883',
+    #             'wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Borg Sound - Gym weights']
+    #
+    # path = 'D:\\thesis-data\\bulgar\\ACDC\\Back In Black'
+    #
+    # list_grid_setup = [(100, 100, 30, 30),
+    #                    (150, 150, 60, 60)]
+    #
+    # alternate_grid = [(150, 150, 60, 60),
+    #                   (200, 200, 70, 70),  # too high, but acceptable results
+    #                   (250, 250, 80, 80)]  # seems to cap
+    #
+    # get_similarity(path, alternate_grid)
 

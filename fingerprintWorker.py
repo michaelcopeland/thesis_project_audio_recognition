@@ -32,7 +32,7 @@ def fingerprint_worker(file_path, limit=None, grid_only=False):
 
     # using different extraction method for mp3
     if extension is '.mp3' or '.mpeg':
-        print(file_path)
+        # print(file_path)
         num_channels, frame_rate, audio_data = hlp.retrieve_audio_mpeg(file_path, limit)
     else:
         num_channels, frame_rate, audio_data = hlp.retrieve_audio(file_path, limit)
@@ -196,7 +196,7 @@ def align_matches_weighted(list_matches):
 
 
 def fingerprint_songs(reset_db=False, song_limit=None):
-    dir_structure = export.build_dir_map(export.mp3_test)
+    dir_structure = export.build_dir_map(export.exteral_root)
 
     if reset_db:
         reset_database()
@@ -266,7 +266,7 @@ def get_wavs_by_fgp(is_fgp=0):
 
 
 if __name__ == '__main__':
-    fingerprint_songs(song_limit=1)
+    fingerprint_songs(song_limit=2000)
     # test1 = 'C:\\Users\\Vlad\\Documents\\thesis\\audioExtraction\\wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Chris Skyes - The Black Sea\\SFX Medium Wave Splash on Rocks 12.wav'
     # sn, list_hash = fingerprint_worker(test1,
     #                                    limit=4)

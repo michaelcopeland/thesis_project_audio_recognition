@@ -157,7 +157,7 @@ def insert_song(song_name='', fgp=0):
         return True
     except:
         print('Could not insert {}'.format(song_name))
-        print('Make sure the path length is under 256 characters')
+        print('Title may be over 150 chars long, or there are special characters in the string')
         connection.rollback()
         return False
 

@@ -20,7 +20,7 @@ CUSTOM_EXT  = '.grid'
 
 
 def _get_dir_structure(dir_path):
-    """Returns all stored wavs"""
+    """Returns all stored files"""
     files = []
 
     for (dirpath, dirname, filenames) in os.walk(dir_path):

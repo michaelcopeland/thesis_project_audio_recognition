@@ -10,15 +10,6 @@ import time
 import math
 
 fgp_api = Fingerprint()
-INVALID_EXT = ['pdf', 'txt', 'jpg', 'wav.alt', 'csv', 'xlsx', 'alt']
-VALID_EXT   = ['.wav', '.ogg', '.mp3', '.flac', '.mpeg']
-
-
-def has_valid_extension(path_to_file):
-    path, ext = os.path.splitext(path_to_file)
-    if ext in VALID_EXT:
-        return True
-    return False
 
 
 # deprecated
@@ -39,7 +30,12 @@ def fingerprint_worker(file_path, limit=None, grid_only=False):
     song_name, extension = os.path.splitext(file_path)
     # print('Fingerprinting: ', song_name, '\nFile extension: ', extension)
 
-    num_channels, frame_rate, audio_data = hlp.retrieve_audio(file_path, limit)
+    # using different extraction method for mp3
+    if extension is '.mp3' or '.mpeg':
+        print(file_path)
+        num_channels, frame_rate, audio_data = hlp.retrieve_audio_mpeg(file_path, limit)
+    else:
+        num_channels, frame_rate, audio_data = hlp.retrieve_audio(file_path, limit)
     #print('from fingerprint worker\n frame rate {}, data {}'.format(frame_rate, channels))
     result = set()
 
@@ -200,7 +196,7 @@ def align_matches_weighted(list_matches):
 
 
 def fingerprint_songs(reset_db=False, song_limit=None):
-    dir_structure = export.build_dir_map(export.flac_test)
+    dir_structure = export.build_dir_map(export.mp3_test)
 
     if reset_db:
         reset_database()
@@ -228,8 +224,8 @@ def fingerprint_songs(reset_db=False, song_limit=None):
         path = dir_structure[file] + '\\' + file
 
         # avoid invalid extensions
-        ext = file.split(".")[-1].lower()
-        if ext in INVALID_EXT:
+        _pth, ext = os.path.splitext(path)
+        if ext not in export.VALID_EXT:
             continue
 
         # insert song returns true if it managed, false otherwise
@@ -246,7 +242,7 @@ def fingerprint_songs(reset_db=False, song_limit=None):
 
             # stop everything in case of failure
             if not res:
-                db.delete_songs(file)
+                db.delete_songs([file])
                 print('Fingerprinting failed for: {}'.format([file]))
                 return
         else:

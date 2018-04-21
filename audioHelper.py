@@ -6,7 +6,10 @@ import time
 import sys
 import matplotlib.pyplot as plt
 
-class AudioHelper():
+from pydub import AudioSegment
+
+
+class AudioHelper:
     """This class handles audio data of a 24-bit encoding"""
 
     def __init__(self, filename):
@@ -98,7 +101,6 @@ class AudioHelper():
         self.p.terminate()
         print('playback done')
 
-# TODO: implement pydub audio retriever in case of mp3 files!!! [OPTIONAL]
 
 def retrieve_audio(wave_file, limit=None):
     """Retrieves audio information from sound file using PySoundFile.
@@ -143,6 +145,31 @@ def retrieve_audio(wave_file, limit=None):
 
     elif num_channels == 2:
         return num_channels, frame_rate, list(audio_data)
+
+
+def retrieve_audio_mpeg(filename, limit=None):
+    """Similar to retrieve_audio
+    This method returns audio data for mp3 files"""
+    frame_rate   = None
+    channels     = []
+    num_channels = 0
+
+    try:
+        audio_data = AudioSegment.from_file(filename)
+        num_channels = audio_data.channels
+        if limit:
+            audio_data = audio_data[:limit * 1000]
+
+        raw = np.fromstring(audio_data._data, np.int16)
+
+        for chn in range(audio_data.channels):
+            channels.append(raw[chn::audio_data.channels])
+
+        frame_rate = audio_data.frame_rate
+    except:
+        print('could not read mp3')
+
+    return num_channels, frame_rate, channels
 
 # testing main
 if __name__ == '__main__':

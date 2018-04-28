@@ -12,6 +12,8 @@ RESULT_DICT = {
     'FA': 0, # false accept
     'FAM_HIT': 0
 }
+num_tracks, db_tracks = fw.get_wavs_by_fgp(1)
+print('Welcome to the experiment script.\nNumber of unique database entries: {}'.format(num_tracks))
 
 test_tracks = ['01.wav',
                'aic.wav',
@@ -41,6 +43,8 @@ mp3_test_tracks = [
 
 
 def reset_result_dict():
+    # safety print
+    print(RESULT_DICT)
     for key in RESULT_DICT.keys():
         RESULT_DICT[key] = 0
 
@@ -56,8 +60,8 @@ def exp_with_weighted_align(song, limit=None):
     """
     dir_map = export.build_dir_map(export.exteral_root)
 
-    song_in_fgp_status = song[0]
     song_in = song[1]
+
     if song_in in dir_map:
         directory = dir_map[song_in]
     else:
@@ -73,20 +77,25 @@ def exp_with_weighted_align(song, limit=None):
     # result track name
     r_t_name = result_track['song name']
 
+    # check if song is in the DB
+    db = False
+    if song_in in db_tracks:
+        db = True
+
     # TP
-    if r_t_name == song_in:
+    if r_t_name == song_in and db:
         RESULT_DICT['TP'] += 1
     # TN
-    elif r_t_name == 'no_track' and song_in_fgp_status == 0:
+    elif r_t_name == 'No results found' and not db:
         RESULT_DICT['TN'] += 1
-    # FP
-    elif r_t_name != song_in and song_in_fgp_status == 1:
-        RESULT_DICT['FP'] += 1
     # FN
-    elif r_t_name == 'no_track' and song_in_fgp_status == 1:
+    elif r_t_name == 'No results found' and db:
         RESULT_DICT['FN'] += 1
+    # FP
+    elif r_t_name != song_in and db:
+        RESULT_DICT['FP'] += 1
     # FA
-    elif r_t_name != song_in and song_in_fgp_status == 0:
+    elif r_t_name != song_in and not db:
         RESULT_DICT['FA'] += 1
 
     fam_hit = False
@@ -96,8 +105,6 @@ def exp_with_weighted_align(song, limit=None):
             fam_hit = True
     if fam_hit:
         RESULT_DICT['FAM_HIT'] += 1
-    else:
-        print('!!!!!!!!!!!!!\nSong in: {}\nValues: {}'.format(song_in, matched_fam.values()))
 
     print('Querying {} --- {} s\nResult={}'.format(song_in, limit, result_track))
     return RESULT_DICT
@@ -153,15 +160,19 @@ def run_exp3():
 
 def run_exp4_align_weighted():
     limits = [1, 2, 4, 8]
-
+    #limits = [4]
     #num_tracks, track = fw.get_wavs_by_fgp(1)
 
     result = None
     for l in limits:
-
         # reset the result dictionary for different limits
         reset_result_dict()
-        for t in mp3_test_tracks:
+        counter = 0
+        for t in db_tracks:
+            if counter == 127:
+                break
+            counter += 1
+
             t = [1, t]
             result = exp_with_weighted_align(t, l)
         print('Limit: {} s'.format(l))
@@ -175,7 +186,7 @@ def test_changes():
     for l in limit:
         reset_result_dict()
 
-        for t in test_tracks:
+        for t in mp3_test_tracks:
             t = [1, t]
             result = exp_with_weighted_align(t, l)
         print('Limit: {} s'.format(l))
@@ -223,6 +234,29 @@ def run_test_list_colision_rate():
         plt.show()
 
 
+def test_all_answers(song_in):
+    """Tests whether algorithm correctly returns TP, TN, FP, FN"""
+
+    dir_map = export.build_dir_map(export.exteral_root)
+
+    if song_in in dir_map:
+        directory = dir_map[song_in]
+    else:
+        print(song_in, ' missing')
+        return
+
+    sn, list_hash = fw.fingerprint_worker(directory + '\\' + song_in, limit=1)
+
+    matches = fw.db.get_matches(list_hash)
+
+    result_track, matched_fam, res = fw.align_matches_weighted(matches)
+    for e in res:
+        print(e)
+    # result track name
+    r_t_name = result_track['song name']
+    print(r_t_name)
+
 if __name__ == '__main__':
     #exp_aligned_matches()
     run_exp4_align_weighted()
+

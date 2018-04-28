@@ -163,15 +163,18 @@ def align_matches_weighted(list_matches):
     weighted_candidates = sorted(weighted_candidates, key=lambda weight: weight[0])
     res = [elem for elem in weighted_candidates if elem[0] > 0.0]
 
+    # escape case where list of candidates is empty
     if len(res) == 0:
         return {'song id': 0,
         'song name': 'no_track',
         'is fingerprinted': 0}, candidates, res
 
     prime_candidate = res[-1]
+    prime_weight = prime_candidate[0]
     max_count = 0
     query_track = ''
 
+    # query the track with most hits
     for k, v in prime_candidate[2].items():
         if v > max_count:
             max_count = v
@@ -179,19 +182,21 @@ def align_matches_weighted(list_matches):
 
     query_hit, id, name, is_fng = db.get_song_by_name(query_track)
 
-    if query_hit:
-        ret_name = name
-    elif name == 'track_not_fingerprinted':
-        ret_name = 'track_not_fingerprinted'
-    else:
-        # returns 'no_track' in case no query hit
-        ret_name = name
+    # cut-off for candidates that are likely to be wrong
+    if prime_weight <= 368.87944117144235 and max_count <= 10:
+        track = {
+            'song id': 0,
+            'song name': 'No results found',
+            'is fingerprinted': 0,
+        }
+        return track, candidates, res
 
     track = {
         'song id': id,
-        'song name': ret_name,
+        'song name': name,
         'is fingerprinted': int(is_fng),
     }
+
     return track, candidates, res
 
 
@@ -266,7 +271,7 @@ def get_wavs_by_fgp(is_fgp=0):
 
 
 if __name__ == '__main__':
-    fingerprint_songs(song_limit=2000)
+    fingerprint_songs(song_limit=500)
     # test1 = 'C:\\Users\\Vlad\\Documents\\thesis\\audioExtraction\\wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Chris Skyes - The Black Sea\\SFX Medium Wave Splash on Rocks 12.wav'
     # sn, list_hash = fingerprint_worker(test1,
     #                                    limit=4)

@@ -143,6 +143,7 @@ def setup():
         connection.commit()
         print('Setup complete!')
     except:
+        print('Failed to setup tables.')
         connection.rollback()
 
 
@@ -156,9 +157,9 @@ def insert_song(song_name='', fgp=0):
         print('Inserted song: {}'.format(song_name))
         return True
     except:
+        connection.rollback()
         print('Could not insert {}'.format(song_name))
         print('Title may be over 150 chars long, or there are special characters in the string')
-        connection.rollback()
         return False
 
 
@@ -180,8 +181,8 @@ def insert_fingerprint(hashkey, song_name, time_offset):
 
 
 def dump_fingerprints(formatted_list):
-    """Receives a list of values to insert to the database
-    A value has the hashkey, name of song, time offset
+    """Receives a list of fingerprints to insert to the database
+    The row look like: hashkey, name of song, time offset
     """
     dump_insert = INSERT_FINGERPRINT_DUMP
 
@@ -314,10 +315,10 @@ def get_song_by_name(song_name):
         is_fingerprinted = is_fgp
 
     if song_id is 0 and song_name == '':
-        song_name = 'no_track'
-        return True, song_id, song_name, is_fingerprinted
+        song_name = 'No results found'
+        return False, song_id, song_name, is_fingerprinted
 
-    return False, song_id, song_name, is_fingerprinted
+    return True, song_id, song_name, is_fingerprinted
 
 
 def query_all_fingerprints():
@@ -357,7 +358,6 @@ def query(hashkey=None):
 
 
 def get_matches(list_of_hashes):
-    #print('Get matches!')
     map = dict()
     for hash_key, offset in list_of_hashes:
         map[hash_key] = offset
@@ -365,14 +365,13 @@ def get_matches(list_of_hashes):
     values = map.keys()
     values = list(filter(None, values))
     values = list(values)
+
     num_query = len(values)
     query_matches = SELECT_MULTIPLE
 
-    # ensure there is something in the query (otherwise it crashes)
+    # escape rare cases where the track is so short it generates no hash_keys
     if num_query == 0:
-        return ('track_not_fingerprinted', 9999)
-        #num_query = 1
-        #values = ['\'na\'']
+        return 'nothing_to_query', 0
 
     query_matches = query_matches % ', '.join(['%s'] * num_query)
     #print(query_matches)
@@ -384,11 +383,10 @@ def get_matches(list_of_hashes):
         yield (song_name, time_offset - map[hash_k])
 
 
-# REMEMBER TO CREATE THE DATABASE WITH MYSQL!!!
 connection = connect()
 cur = connection.cursor()
-# if anything fails it's dump_fingerprints due to buffer memory size
+# For indexing: ensure large buffer
 cur.execute('set global max_allowed_packet=67108864')
 
 if __name__=='__main__':
-    pass
+    print('Hello world!')

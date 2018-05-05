@@ -1,15 +1,17 @@
 """Stores audio information and allows to compute various similarity searches"""
 
 from datasketch import MinHash
-import fingerprintWorker as fw
-
 from scipy.signal import correlate2d, correlate
 from scipy.stats import pearsonr, linregress
+
+import audioHelper as hlp
 import exportData as export
 import numpy as np
 import matplotlib.pyplot as plt
+import fingerprintWorker as fw
 
-class AudioSimilarity():
+
+class AudioSimilarity:
     def __init__(self):
         self.storedAudio = dict()
 
@@ -93,18 +95,15 @@ class AudioSimilarity():
         print('Linear regression:\n\nslope={}\nintercept={}\nr_val={}\np_val={}\nerr={}'.format(
             slope, intercept, r_value, p_value, std_err))
 
-    def plot_waves(self, wav1, wav2):
-        l1 = len(wav1)
-        l2 = len(wav2)
 
-        if l1 > l2:
-            wav1 = wav1[:l2]
-        else:
-            wav2 = wav2[:l1]
-        # print(np.shape(wav1))
-        # print(np.shape(wav2))
-        plt.plot(wav1, wav2, '--b', wav1, '--r', wav2, alpha=0.75)
-        plt.show()
+def plot_wave(audio_file):
+    audio_file = hlp.retrieve_audio_mpeg(audio_file)
+    print(audio_file)
+    ch1 = audio_file[2][0]
+    ch2 = audio_file[2][1]
+
+    plt.plot(ch1, ch2, '-b', ch1, '-r', ch2, alpha=0.75)
+    plt.show()
 
 
 def minHash(set1, set2):
@@ -124,6 +123,7 @@ def minHash(set1, set2):
     #print("Actual Jaccard: ", actual_jaccard)
 
     return sim
+
 
 def compute_sim(primary, candidates):
     """Calculates Jaccard similarity of different audio tracks
@@ -194,7 +194,9 @@ def get_similarity(list_dir, grid_setup):
 
 
 if __name__=='__main__':
-    compute_sim('08. Have A Drink On Me.grid', None)
+    track = 'D:\\xmpeg-bulgar\\King Crimson\\Larks Tongues In Aspic\\01. I Larks Tongues Aspic, Part One.mp3'
+    plot_wave(track)
+    #compute_sim('08. Have A Drink On Me.grid', None)
     # list_paths=['wavs\\c',
     #             'wavs\\river',
     #             'wavs\\estring',

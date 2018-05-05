@@ -89,6 +89,7 @@ class Fingerprint:
                     fan_val=DEFAULT_FAN_VALUE,
                     min_amp=DEFAULT_MIN_AMP,
 
+                    plot=False,
                     grid_only=False,
                     verbose=False):
 
@@ -104,7 +105,7 @@ class Fingerprint:
         arr2D[arr2D == -np.inf] = 0
 
         # find local maxima
-        local_maxima = self.get_2D_peaks(arr2D, plot=False, min_amp=min_amp, verbose=verbose)
+        local_maxima = self.get_2D_peaks(arr2D, plot=plot, min_amp=min_amp, verbose=verbose)
 
         if grid_only:
             return self.grid_filter_peaks(local_maxima)
@@ -230,7 +231,7 @@ class Fingerprint:
             return f_res, t_res
         return 'invalid', 'invalid'
 
-    def grid_filter_peaks(self, peaks, plot=False):
+    def grid_filter_peaks(self, peaks, plot=True):
         """
         Filters the peaks.
 
@@ -241,8 +242,10 @@ class Fingerprint:
         """
         # peaks will be stored as string coordinates for later use by minHash
         str_peaks = []
-        #freq_coords = []
-        #time_coords = []
+
+        if plot:
+            freq_coords = []
+            time_coords = []
 
         for i in range(len(peaks)):
             f, t = self._localize_coord(peaks[i][IDX_FREQ_I], peaks[i][IDX_TIME_J])
@@ -250,15 +253,16 @@ class Fingerprint:
                 p_coord = str(t) + str(f)
                 #p_coord = str(f)
                 str_peaks.append(p_coord)
-                #freq_coords.append(f)
-                #time_coords.append(t)
+                if plot:
+                    freq_coords.append(f)
+                    time_coords.append(t)
         # print('Length of peak lists={} -freq {} -time'.format(len(freq_coords), len(time_coords)))
 
         if plot:
             print('Plotting grid!')
 
             plt.rc('grid', linestyle='-', color='black')
-            #plt.scatter(freq_coords, time_coords)
+            plt.scatter(freq_coords, time_coords)
             plt.grid(True)
             plt.show()
         # print('freq coords: {}\ntime coords: {}'.format(freq_coords, time_coords))

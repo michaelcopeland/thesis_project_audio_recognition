@@ -2,7 +2,8 @@
 
 import MySQLdb as mysql
 
-DATABASE_NAME               = 'audioExtraction'
+WAV_DB                      = 'audioExtraction'
+MP3_DB                      = 'mpegExtraction'
 TEST_DATABASE               = 'test_audio'
 
 FINGERPRINTS_TABLE          = 'fingerprints'
@@ -24,7 +25,7 @@ def connect():
         port=3306,
         user='root',
         passwd='iamfuzzy222',
-        db=DATABASE_NAME
+        db=WAV_DB
     )
     print('Connected to database!')
     return db
@@ -389,4 +390,5 @@ cur = connection.cursor()
 cur.execute('set global max_allowed_packet=67108864')
 
 if __name__=='__main__':
+    setup()
     print('Hello world!')

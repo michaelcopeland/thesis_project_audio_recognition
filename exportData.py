@@ -3,9 +3,13 @@ import fingerprintWorker as fw
 import pickle
 import os
 
+#file paths
 EXPORT_PATH = 'C:\\Users\\Vlad\\Documents\\thesis\\audioExtraction\\exported_grids'
 old_root        = 'C:\\Users\\Vlad\Documents\\thesis\\audioExtraction\\wavs'
 exteral_root    = 'D:\\thesis-data'
+mpeg_root       = 'D:\\xmpeg-bulgar'
+
+# test paths
 db_test         = 'D:\\db_test'
 mp3_test        = 'C:\\Users\\Vlad\Documents\\thesis\\audioExtraction\\mp3_test'
 flac_test       = 'C:\\Users\\Vlad\Documents\\thesis\\audioExtraction\\flac_test'

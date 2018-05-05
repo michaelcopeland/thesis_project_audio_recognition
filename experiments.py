@@ -169,7 +169,7 @@ def run_exp4_align_weighted():
         reset_result_dict()
         counter = 0
         for t in db_tracks:
-            if counter == 127:
+            if counter == 360:
                 break
             counter += 1
 

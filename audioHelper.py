@@ -167,7 +167,7 @@ def retrieve_audio_mpeg(filename, limit=None):
 
         frame_rate = audio_data.frame_rate
     except:
-        print('could not read mp3')
+        print('could not read audio file, or path was wrong')
 
     return num_channels, frame_rate, channels
 

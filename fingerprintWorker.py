@@ -25,7 +25,7 @@ def retrieve_unfiltered_peaks(filename, limit=None):
 
 
 # TODO: fix issue where program crashes if audio file is corrupted
-def fingerprint_worker(file_path, limit=None, grid_only=False):
+def fingerprint_worker(file_path, limit=None, grid_only=False, verbose=False, plot=False):
     #st = time.time()
     song_name, extension = os.path.splitext(file_path)
     # print('Fingerprinting: ', song_name, '\nFile extension: ', extension)
@@ -40,15 +40,17 @@ def fingerprint_worker(file_path, limit=None, grid_only=False):
     result = set()
 
     for num_channels, channel in enumerate(audio_data):
-        hashes = fgp_api.fingerprint(channel, frame_rate=frame_rate)
+        # print('Channel number:', num_channels+1)
+        hashes = fgp_api.fingerprint(channel, frame_rate=frame_rate, verbose=verbose, plot=plot)
 
         if grid_only:
-            return fgp_api.fingerprint(channel, frame_rate=frame_rate, grid_only=grid_only)
+            return fgp_api.fingerprint(channel, frame_rate=frame_rate, grid_only=grid_only, plot=plot)
 
         result |= set(hashes)
 
     #ft = time.time() - st
     #print('Elapsed fingerprinting time: ', ft)
+    #print('Generated {} hashes'.format(len(result)))
     return song_name, result
 
 
@@ -101,7 +103,7 @@ def align_matches(list_matches, family=False):
 
     if query_hit:
         song_name = name
-    elif song_name == 'track_not_fingerprinted':
+    elif song_name == 'No results found':
         pass
     else:
         # returns 'no_track'
@@ -161,12 +163,12 @@ def align_matches_weighted(list_matches):
         weighted_candidates.append(cand_tup)
 
     weighted_candidates = sorted(weighted_candidates, key=lambda weight: weight[0])
-    res = [elem for elem in weighted_candidates if elem[0] > 0.0]
+    res = [elem for elem in weighted_candidates if elem[0] > 100.0]
 
     # escape case where list of candidates is empty
     if len(res) == 0:
         return {'song id': 0,
-        'song name': 'no_track',
+        'song name': 'No results found',
         'is fingerprinted': 0}, candidates, res
 
     prime_candidate = res[-1]
@@ -240,16 +242,17 @@ def fingerprint_songs(reset_db=False, song_limit=None):
 
             # generate and insert hashes
             _, list_hashes = fingerprint_worker(path)
-            formatted_list = []
+            #formatted_list = []
             for h in list_hashes:
-                formatted_list.append((h[0], file, h[1]))
-            res = db.dump_fingerprints(formatted_list)
-
-            # stop everything in case of failure
-            if not res:
-                db.delete_songs([file])
-                print('Fingerprinting failed for: {}'.format([file]))
-                return
+                db.insert_fingerprint(h[0], file, h[1])
+            #     formatted_list.append((h[0], file, h[1]))
+            # res = db.dump_fingerprints(formatted_list)
+            #
+            # # stop everything in case of failure
+            # if not res:
+            #     db.delete_songs([file])
+            #     print('Fingerprinting failed for: {}'.format([file]))
+            #     return
         else:
             print('Fingerprinting skipped')
             continue
@@ -271,14 +274,19 @@ def get_wavs_by_fgp(is_fgp=0):
 
 
 if __name__ == '__main__':
-    fingerprint_songs(song_limit=500)
-    # test1 = 'C:\\Users\\Vlad\\Documents\\thesis\\audioExtraction\\wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Chris Skyes - The Black Sea\\SFX Medium Wave Splash on Rocks 12.wav'
-    # sn, list_hash = fingerprint_worker(test1,
-    #                                    limit=4)
-    #
-    # matches = db.get_matches(list_hash)
-    #
-    # x, r = align_matches_weighted(matches)
-    # print(x)
-    # for itm in r:
-    #     print(itm)
+    #fingerprint_songs(song_limit=50)
+    test1 = 'D:\\thesis-data\\a-wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Chris Skyes - The Black Sea\\SFX Large Wave Splash on Rocks 21.wav'
+    #test1 = 'D:\\xmpeg-bulgar\\Black Keys\\El Camino\\07. Sister.mp3'
+
+    #(100, 100, 30, 30)
+    #fgp_api.set_grid_attributes(100, 100, 10, 10)
+     # test1 = 'D:\\xmpeg-bulgar\\King Crimson\\Larks Tongues In Aspic\\01. I Larks Tongues Aspic, Part One.mp3'
+    sn, hl = fingerprint_worker(test1, limit=2, verbose=True, grid_only=False, plot=False)
+
+    matches = db.get_matches(hl)
+
+    track, cand, res = align_matches_weighted(matches)
+    print(len(cand.keys()))
+    for itm in res:
+        print(itm)
+    print(track)

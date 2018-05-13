@@ -4,9 +4,9 @@ import pickle
 import os
 
 #file paths
-EXPORT_PATH = 'C:\\Users\\Vlad\\Documents\\thesis\\audioExtraction\\exported_grids'
+EXPORT_PATH     = 'C:\\Users\\Vlad\\Documents\\thesis\\audioExtraction\\exported_grids'
 old_root        = 'C:\\Users\\Vlad\Documents\\thesis\\audioExtraction\\wavs'
-exteral_root    = 'D:\\thesis-data'
+wav_root        = 'D:\\thesis-data'
 mpeg_root       = 'D:\\xmpeg-bulgar'
 
 # test paths
@@ -98,7 +98,7 @@ def load_grid(file_name, local_dir=EXPORT_PATH):
 
 
 if __name__=='__main__':
-    m = build_dir_map(exteral_root)
+    m = build_dir_map(wav_root)
     alread_done = build_dir_map(EXPORT_PATH)
 
     fw.fgp_api.set_grid_attributes(150, 150, 60, 60)

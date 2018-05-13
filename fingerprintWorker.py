@@ -185,7 +185,9 @@ def align_matches_weighted(list_matches):
     query_hit, id, name, is_fng = db.get_song_by_name(query_track)
 
     # cut-off for candidates that are likely to be wrong
-    if prime_weight <= 368.87944117144235 and max_count <= 10:
+    CUT_OFF_WEIGHT_1 = 368.87944117144235
+    CUT_OFF_WEIGHT_2 = 1010
+    if prime_weight <= CUT_OFF_WEIGHT_2 and max_count <= 10:
         track = {
             'song id': 0,
             'song name': 'No results found',

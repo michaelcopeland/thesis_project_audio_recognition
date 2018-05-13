@@ -25,7 +25,7 @@ def connect():
         port=3306,
         user='root',
         passwd='iamfuzzy222',
-        db=MP3_DB
+        db=WAV_DB
     )
     print('Connected to database!')
     return db

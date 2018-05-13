@@ -49,6 +49,53 @@ def reset_result_dict():
         RESULT_DICT[key] = 0
 
 
+def exp_for_sensitivity(track_list, dir_map, limit=None):
+    for tr in track_list:
+        directory = dir_map[tr]
+        path = directory + '\\' + tr
+
+        sn, list_hash = fw.fingerprint_worker(path, limit=limit)
+
+        matches = fw.db.get_matches(list_hash)
+
+        result_track, matched_fam, res = fw.align_matches_weighted(matches)
+
+        # result track name
+        r_t_name = result_track['song name']
+
+        # check if song is in the DB
+        db = False
+        if tr in db_tracks:
+            db = True
+
+        # TP
+        if r_t_name == tr and db:
+            RESULT_DICT['TP'] += 1
+        # TN
+        elif r_t_name == 'No results found' and not db:
+            RESULT_DICT['TN'] += 1
+        # FN
+        elif r_t_name == 'No results found' and db:
+            RESULT_DICT['FN'] += 1
+        # FP
+        elif r_t_name != tr and db:
+            RESULT_DICT['FP'] += 1
+        # FA
+        elif r_t_name != tr and not db:
+            RESULT_DICT['FA'] += 1
+
+        fam_hit = False
+        for k, v in matched_fam.items():
+            if tr in v:
+                # print('hit! ', song, v)
+                fam_hit = True
+        if fam_hit:
+            RESULT_DICT['FAM_HIT'] += 1
+
+        print('Querying {} --- {} s\nResult={}'.format(tr, limit, result_track))
+    return RESULT_DICT
+
+
 def exp_with_weighted_align(song, limit=None):
     """Runs a query experiment
 
@@ -110,53 +157,17 @@ def exp_with_weighted_align(song, limit=None):
     return RESULT_DICT
 
 
-# REMEMEBER: send in the song's fingerprint status (0, 1) as a tuple (status, song)
-def run_exp1():
-    limits = [1, 2, 4, 8]
-    # test_track = 'rain_umbrella_001_wide.wav'
-    # exp_1(test_track, limit)
-
-    for track in test_tracks:
-        for l in limits:
-            track = [1, track]
-            exp_with_weighted_align(track, l)
-
-
-# REMEMEBER: send in the song's fingerprint status (0, 1) as a tuple (status, song)
-def run_exp2():
+def run_sensitivity_test():
     limits = [1, 2, 4, 8]
 
-    #get all fingerprinted songs
-    num_tracks, track = fw.get_wavs_by_fgp(1)
+    list_tracks, dir_map = generate_track_list('wav', db_set=40, hold_back_set=10)
 
-    result = None
-    for l in limits:
-
-        # reset the result dictionary for different limits
+    for lim in limits:
         reset_result_dict()
-        for t in track:
-            t = [1, t]
-            result = exp_with_weighted_align(t, l)
-        print('Limit: {} s'.format(l))
+        result = exp_for_sensitivity(list_tracks, dir_map, limit=lim)
+
+        print('Limit: {} s'.format(lim))
         print(result)
-
-def run_exp3():
-    """the point is to find if the correct song is the family of returned songs"""
-    limits = [1, 2, 4, 8]
-
-    num_tracks, track = fw.get_wavs_by_fgp(1)
-
-    result = None
-    for l in limits:
-
-        # reset the result dictionary for different limits
-        reset_result_dict()
-        for t in track:
-            t = [1, t]
-            result = exp_with_weighted_align(t, l)
-        print('Limit: {} s'.format(l))
-        print(result)
-
 
 def run_exp4_align_weighted():
     limits = [1, 2, 4, 8]
@@ -179,18 +190,50 @@ def run_exp4_align_weighted():
         print(result)
 
 
-def test_changes():
-    limit = [2, 4]
+def generate_track_list(track_type, db_set=0, hold_back_set=0):
+    """Generates a list of tracks containing a specified number of
+    tracks from the database and specified number of tracks not present
+    in the database.
 
-    result = None
-    for l in limit:
-        reset_result_dict()
+    This is done for the purpose of specificity testing.
 
-        for t in mp3_test_tracks:
-            t = [1, t]
-            result = exp_with_weighted_align(t, l)
-        print('Limit: {} s'.format(l))
-        print(result)
+    Attributes:
+        db_tracks - number of tracks we want from the database
+        hold_back - number of tracks we want that are not in the database
+        track_type - wav or mp3
+
+    Return:
+        res - a list of audio track titles
+    """
+    # counters for how many songs we've added for each set
+    goal_db = 0
+    goal_hold_back = 0
+    res = []
+
+    # get all available tracks
+    if track_type == 'wav':
+        dir_map = export.build_dir_map(export.wav_root)
+    elif track_type == 'mp3':
+        dir_map = export.build_dir_map(export.mpeg_root)
+    else:
+        print('Only wav or mp3 types accepted')
+        return
+
+    # get number of tracks and a list of tracks
+    nt, all_tracks_from_db = fw.get_wavs_by_fgp(1)
+
+    # create the list
+    for tr in dir_map.keys():
+        if tr in all_tracks_from_db and goal_db < db_set:
+            res.append(tr)
+            goal_db += 1
+        if tr not in all_tracks_from_db and goal_hold_back < hold_back_set:
+            res.append(tr)
+            goal_hold_back += 1
+        if goal_db == db_set and goal_hold_back == hold_back_set:
+            print('done!')
+            break
+    return res, dir_map
 
 
 def exp_aligned_matches():
@@ -237,7 +280,7 @@ def run_test_list_colision_rate():
 def test_all_answers(song_in):
     """Tests whether algorithm correctly returns TP, TN, FP, FN"""
 
-    dir_map = export.build_dir_map(export.exteral_root)
+    dir_map = export.build_dir_map(export.wav_root)
 
     if song_in in dir_map:
         directory = dir_map[song_in]
@@ -258,5 +301,6 @@ def test_all_answers(song_in):
 
 if __name__ == '__main__':
     #exp_aligned_matches()
-    run_exp4_align_weighted()
+    #run_exp4_align_weighted()
+    run_sensitivity_test()
 

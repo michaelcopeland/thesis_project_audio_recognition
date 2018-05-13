@@ -203,7 +203,7 @@ def align_matches_weighted(list_matches):
 
 
 def fingerprint_songs(reset_db=False, song_limit=None):
-    dir_structure = export.build_dir_map(export.exteral_root)
+    dir_structure = export.build_dir_map(export.mpeg_root)
 
     if reset_db:
         reset_database()
@@ -242,17 +242,17 @@ def fingerprint_songs(reset_db=False, song_limit=None):
 
             # generate and insert hashes
             _, list_hashes = fingerprint_worker(path)
-            #formatted_list = []
+            formatted_list = []
             for h in list_hashes:
-                db.insert_fingerprint(h[0], file, h[1])
-            #     formatted_list.append((h[0], file, h[1]))
-            # res = db.dump_fingerprints(formatted_list)
-            #
-            # # stop everything in case of failure
-            # if not res:
-            #     db.delete_songs([file])
-            #     print('Fingerprinting failed for: {}'.format([file]))
-            #     return
+            #     db.insert_fingerprint(h[0], file, h[1])
+                formatted_list.append((h[0], file, h[1]))
+            res = db.dump_fingerprints(formatted_list)
+
+            # stop everything in case of failure
+            if not res:
+                db.delete_songs([file])
+                print('Fingerprinting failed for: {}'.format([file]))
+                return
         else:
             print('Fingerprinting skipped')
             continue
@@ -274,19 +274,20 @@ def get_wavs_by_fgp(is_fgp=0):
 
 
 if __name__ == '__main__':
-    #fingerprint_songs(song_limit=50)
-    test1 = 'D:\\thesis-data\\a-wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Chris Skyes - The Black Sea\\SFX Large Wave Splash on Rocks 21.wav'
-    #test1 = 'D:\\xmpeg-bulgar\\Black Keys\\El Camino\\07. Sister.mp3'
-
-    #(100, 100, 30, 30)
-    #fgp_api.set_grid_attributes(100, 100, 10, 10)
-     # test1 = 'D:\\xmpeg-bulgar\\King Crimson\\Larks Tongues In Aspic\\01. I Larks Tongues Aspic, Part One.mp3'
-    sn, hl = fingerprint_worker(test1, limit=2, verbose=True, grid_only=False, plot=False)
-
-    matches = db.get_matches(hl)
-
-    track, cand, res = align_matches_weighted(matches)
-    print(len(cand.keys()))
-    for itm in res:
-        print(itm)
-    print(track)
+    pass
+    #fingerprint_songs(song_limit=1)
+    # test1 = 'D:\\thesis-data\\a-wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Chris Skyes - The Black Sea\\SFX Large Wave Splash on Rocks 21.wav'
+    # #test1 = 'D:\\xmpeg-bulgar\\Black Keys\\El Camino\\07. Sister.mp3'
+    #
+    # #(100, 100, 30, 30)
+    # #fgp_api.set_grid_attributes(100, 100, 10, 10)
+    #  # test1 = 'D:\\xmpeg-bulgar\\King Crimson\\Larks Tongues In Aspic\\01. I Larks Tongues Aspic, Part One.mp3'
+    # sn, hl = fingerprint_worker(test1, limit=2, verbose=True, grid_only=False, plot=False)
+    #
+    # matches = db.get_matches(hl)
+    #
+    # track, cand, res = align_matches_weighted(matches)
+    # print(len(cand.keys()))
+    # for itm in res:
+    #     print(itm)
+    # print(track)

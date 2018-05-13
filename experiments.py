@@ -58,7 +58,7 @@ def exp_with_weighted_align(song, limit=None):
         Return:
             Dictionary of results
     """
-    dir_map = export.build_dir_map(export.exteral_root)
+    dir_map = export.build_dir_map(export.mpeg_root)
 
     song_in = song[1]
 
@@ -169,7 +169,7 @@ def run_exp4_align_weighted():
         reset_result_dict()
         counter = 0
         for t in db_tracks:
-            if counter == 360:
+            if counter == 500:
                 break
             counter += 1
 

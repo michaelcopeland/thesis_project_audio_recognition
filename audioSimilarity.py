@@ -125,7 +125,7 @@ def minHash(set1, set2):
     return sim
 
 
-def compute_sim(primary, candidates):
+def compute_sim(primary):
     """Calculates Jaccard similarity of different audio tracks
     It takes a primary track and minhashes it against other candidates
 
@@ -193,9 +193,34 @@ def get_similarity(list_dir, grid_setup):
                             minHash(primary_set, secondary_set)
 
 
+def compute_jaccard(s1, s2):
+    dir_map = export.build_dir_map(export.test_export)
+
+    c1 = None
+    c2 = None
+
+    for itm in dir_map.keys():
+        if itm == s1:
+            c1 = export.load_grid(itm, local_dir=export.test_export)
+        if itm == s2:
+            c2 = export.load_grid(itm, local_dir=export.test_export)
+
+    sim = c1.jaccard(c2)
+    return sim
+
+
 if __name__=='__main__':
-    track = 'D:\\xmpeg-bulgar\\King Crimson\\Larks Tongues In Aspic\\01. I Larks Tongues Aspic, Part One.mp3'
-    plot_wave(track)
+    dir_map = export.build_dir_map(export.test_export)
+
+    for tr1 in dir_map.keys():
+        for tr2 in dir_map.keys():
+            if tr1 != tr2:
+                sim = compute_jaccard(tr1, tr2)
+                if sim > 0.7:
+                    print(sim, tr1, '||', tr2)
+
+    #track = 'D:\\xmpeg-bulgar\\King Crimson\\Larks Tongues In Aspic\\01. I Larks Tongues Aspic, Part One.mp3'
+    #plot_wave(track)
     #compute_sim('08. Have A Drink On Me.grid', None)
     # list_paths=['wavs\\c',
     #             'wavs\\river',

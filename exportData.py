@@ -1,3 +1,4 @@
+from datasketch import MinHash
 import numpy as np
 import fingerprintWorker as fw
 import pickle
@@ -5,13 +6,16 @@ import os
 
 #file paths
 EXPORT_PATH     = 'C:\\Users\\Vlad\\Documents\\thesis\\audioExtraction\\exported_grids'
-old_root        = 'C:\\Users\\Vlad\Documents\\thesis\\audioExtraction\\wavs'
+WAV_GRIDS       = 'C:\\Users\\Vlad\\Documents\\thesis\\audioExtraction\\wav_grids'
+
 wav_root        = 'D:\\thesis-data'
 mpeg_root       = 'D:\\xmpeg-bulgar'
 
 # test paths
 db_test         = 'D:\\db_test'
-mp3_test        = 'C:\\Users\\Vlad\Documents\\thesis\\audioExtraction\\mp3_test'
+test_export     = 'D:\\grid_test\\wav\\15075'
+
+wav_test        = 'D:\\grid_test\\wav_test'
 flac_test       = 'C:\\Users\\Vlad\Documents\\thesis\\audioExtraction\\flac_test'
 
 
@@ -77,14 +81,17 @@ def export_file(file_name, data, dest_dir=EXPORT_PATH):
 
     with open(path, mode='wb') as f:
         try:
-            pickle.dump(data, f)
+            min_data = get_minHash(data)
+            pickle.dump(min_data, f)
             f.close()
             print('Exported: {}'.format(name))
+            return True
         except:
             print('Export failed: {}'.format(name))
+            return False
 
 
-def load_grid(file_name, local_dir=EXPORT_PATH):
+def load_grid(file_name, local_dir=test_export):
     path = local_dir + '\\' + file_name
     filename, ext = os.path.splitext(path)
 
@@ -97,21 +104,50 @@ def load_grid(file_name, local_dir=EXPORT_PATH):
     return data
 
 
+##### minHash helper method ######
+
+def get_minHash(input_set):
+    min_h = MinHash()
+
+    for itm in input_set:
+        min_h.update(itm.encode('utf8'))
+
+    return min_h
+
+
+def export_many(limit=0):
+    # initialize counter for files to be indexed
+    counter = 0
+    # build directory maps
+    dir_map = build_dir_map(wav_test)
+    indexed = build_dir_map(test_export)
+
+    # set grid hash parameters
+    fw.fgp_api.set_grid_attributes(150, 150, 75, 75)
+
+    # go file by file
+    for tr in dir_map.keys():
+        if counter < limit:
+            # check if the file has not already been exported
+            pre = tr[:-4] + CUSTOM_EXT
+            if pre not in indexed.keys():
+                _path      = dir_map[tr] + '\\' + tr
+
+                # ensure a valid extension
+                if has_valid_extension(_path):
+                    set_data = fw.fingerprint_worker(_path, grid_only=True, plot=False)
+                    #print(tr, set_data)
+
+                    # generate gridhash
+                    res = export_file(tr, set_data, dest_dir=test_export)
+
+                    if res:
+                        counter += 1
+                    else:
+                        return
+
+    print('Exported {} grids'.format(counter))
+
+
 if __name__=='__main__':
-    m = build_dir_map(wav_root)
-    alread_done = build_dir_map(EXPORT_PATH)
-
-    fw.fgp_api.set_grid_attributes(150, 150, 60, 60)
-
-    for k in m.keys():
-        grd_k = k[:-4] + '.grid'
-        if grd_k not in alread_done.keys():
-            _file_name = k
-            _path      = m[_file_name] + '\\' + _file_name
-            if has_valid_extension(_path):
-                # print(_file_name, _path)
-                data = fw.fingerprint_worker(_path, grid_only=True)
-
-                export_file(_file_name, data, dest_dir=EXPORT_PATH)
-        else:
-            print('Skipped: {}'.format(k))
+    export_many(14)

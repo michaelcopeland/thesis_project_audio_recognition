@@ -138,7 +138,7 @@ def retrieve_audio(wave_file, limit=None):
         current_wav.close()
     except:
         pass
-        #print('audioHelper Warning: audio with {} channels'.format(num_channels))
+        print('Ensure ffmpeg is installed')
 
     if num_channels == 1:
         return num_channels, frame_rate, audio_data

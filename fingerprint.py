@@ -108,14 +108,14 @@ class Fingerprint:
         local_maxima = self.get_2D_peaks(arr2D, plot=plot, min_amp=min_amp, verbose=verbose)
 
         if grid_only:
-            return self.grid_filter_peaks(local_maxima)
+            return self.grid_filter_peaks(local_maxima, plot=plot)
 
         local_maxima = np.array(local_maxima)
 
         # return hashes
         return self.generate_hashes(local_maxima, fan_value=fan_val)
 
-    def get_2D_peaks(self, arr2D, plot=False, store_data=False, min_amp=DEFAULT_MIN_AMP, verbose=False):
+    def get_2D_peaks(self, arr2D, plot=False, min_amp=DEFAULT_MIN_AMP, verbose=False):
         struct = generate_binary_structure(2, 1)
         neighborhood = iterate_structure(struct, PEAK_NEIGHBORHOOD_SIZE)
 
@@ -142,13 +142,11 @@ class Fingerprint:
         peaks = zip(i, j, amps)  # freq, time, amp
 
         # only consider peaks above a specific amplitude
-        # TODO: remove this before minhash approach
         peaks_filtered = [x for x in peaks if x[2] > min_amp]
 
         # get idx for freq and time
         freq_idx = [x[0] for x in peaks_filtered]
         time_idx = [x[1] for x in peaks_filtered]
-        # frequency = [x[2] for x in peaks_filtered]
 
         if verbose:
             print('FINGERPRINTER DETAILS ***********')
@@ -231,7 +229,7 @@ class Fingerprint:
             return f_res, t_res
         return 'invalid', 'invalid'
 
-    def grid_filter_peaks(self, peaks, plot=True):
+    def grid_filter_peaks(self, peaks, plot=False):
         """
         Filters the peaks.
 
@@ -250,9 +248,10 @@ class Fingerprint:
         for i in range(len(peaks)):
             f, t = self._localize_coord(peaks[i][IDX_FREQ_I], peaks[i][IDX_TIME_J])
             if type(f) and type(t) is not str:
-                p_coord = str(t) + str(f)
+                p_coord = str(t) + " " + str(f)
                 #p_coord = str(f)
                 str_peaks.append(p_coord)
+
                 if plot:
                     freq_coords.append(f)
                     time_coords.append(t)
@@ -270,7 +269,6 @@ class Fingerprint:
         return str_peaks
 
     def generate_hashes(self, peaks, fan_value=DEFAULT_FAN_VALUE):
-        #self.grid_filter_peaks(peaks)
         if PEAK_SORT:
             # sorting peaks by frequency
             sorted(peaks, key=itemgetter(0))

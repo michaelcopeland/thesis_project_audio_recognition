@@ -120,6 +120,7 @@ SELECT_SONG_BY_FGP = 'SELECT {} FROM {} WHERE {} = %s'.format(SONGS_FIELD_SONG_N
                                                               SONGS_FIELD_FINGERPRINTED)
 
 ##### UPDATE STATEMENTS #####
+
 UPDATE_IS_FINGERPRINTED = 'UPDATE {} SET {}=(%s) WHERE {} IN (%s)'.format(SONGS_TABLE,
                                                                           SONGS_FIELD_FINGERPRINTED,
                                                                           SONGS_FIELD_SONG_NAME)
@@ -386,7 +387,7 @@ def get_matches(list_of_hashes):
 
 connection = connect()
 cur = connection.cursor()
-# For indexing: ensure large buffer
+# For indexing: ensure large buffer size
 cur.execute('set global max_allowed_packet=67108864')
 
 if __name__=='__main__':

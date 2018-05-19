@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import exportData as export
 import audioSimilarity as sim
 
+from matplotlib import pyplot as plt
+
 
 RESULT_DICT = {
     'TP': 0,
@@ -256,12 +258,13 @@ def test_list_hash_colision_rate(test_track, limit=None):
 
 
 def run_test_list_colision_rate():
-    test_track = 'C:\\Users\\Vlad\\Documents\\thesis\\audioExtraction\\wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Articulated Sounds - Quiet Streets\\QUIET STREET Back alley, people chatting, ST.wav'
+    test_track = 'D:\\thesis-data\\c2.wav'
     _, list_hash_all = fw.fingerprint_worker(test_track)
+    print('len=', len(list_hash_all))
 
     l_num_hash = []
     num_col_hash = []
-    for l in range(0, 132):
+    for l in range(0, 42):
         print('limit= ', l)
         limited_list = test_list_hash_colision_rate(test_track, limit=l)
 
@@ -273,9 +276,11 @@ def run_test_list_colision_rate():
         print('Num hash: {}'.format(num_hash))
         print('intersection=', intersect)
 
-        plt.plot(l_num_hash, num_col_hash)
-        plt.show()
-
+    plt.plot(l_num_hash, num_col_hash)
+    plt.show()
+    print('num hash',l_num_hash)
+    print('num intersect', num_col_hash)
+    return l_num_hash, num_col_hash
 
 def test_all_answers(song_in):
     """Tests whether algorithm correctly returns TP, TN, FP, FN"""
@@ -299,8 +304,24 @@ def test_all_answers(song_in):
     r_t_name = result_track['song name']
     print(r_t_name)
 
+def gen_plot():
+    num_series = [3, 197, 609, 1127, 1506, 1708, 2095, 2545, 2979, 3147, 3810, 4221, 4797, 4980, 5311, 5830, 6096, 6334, 6847, 6917, 7367, 8001, 8397, 8919, 9274, 9638, 9890, 10408, 10646, 11108, 11486, 11893, 12327, 12625, 12947, 13367, 13499, 13807, 14456, 14540, 15016, 15548]
+    intersect_series = [0, 0, 27, 70, 126, 161, 270, 363, 537, 603, 869, 1085, 1322, 1556, 1776, 2145, 2269, 2563, 2855, 3021, 3452, 4034, 4428, 5063, 5412, 5922, 6091, 6925, 7172, 7784, 8266, 9017, 9494, 10101, 10585, 10946, 11655, 12152, 13394, 13496, 14463, 15548]
+
+    plt.plot(num_series, label='Generated fingerprints')
+    plt.plot(intersect_series, label='Intersecting fingerprints')
+
+    plt.title('Fingerprint Intersection Rate')
+    plt.xlabel('Time in seconds')
+    plt.ylabel('Number of fingerprints')
+
+    plt.legend()
+    plt.show()
+
+
 if __name__ == '__main__':
+    gen_plot()
     #exp_aligned_matches()
     #run_exp4_align_weighted()
-    run_sensitivity_test()
+    #run_sensitivity_test()
 

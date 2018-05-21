@@ -305,17 +305,27 @@ def test_all_answers(song_in):
     print(r_t_name)
 
 def gen_plot():
-    num_series = [3, 197, 609, 1127, 1506, 1708, 2095, 2545, 2979, 3147, 3810, 4221, 4797, 4980, 5311, 5830, 6096, 6334, 6847, 6917, 7367, 8001, 8397, 8919, 9274, 9638, 9890, 10408, 10646, 11108, 11486, 11893, 12327, 12625, 12947, 13367, 13499, 13807, 14456, 14540, 15016, 15548]
-    intersect_series = [0, 0, 27, 70, 126, 161, 270, 363, 537, 603, 869, 1085, 1322, 1556, 1776, 2145, 2269, 2563, 2855, 3021, 3452, 4034, 4428, 5063, 5412, 5922, 6091, 6925, 7172, 7784, 8266, 9017, 9494, 10101, 10585, 10946, 11655, 12152, 13394, 13496, 14463, 15548]
 
-    plt.plot(num_series, label='Generated fingerprints')
-    plt.plot(intersect_series, label='Intersecting fingerprints')
+    points = [
+        (0, 0),
+        (10, 20),
+        (37, 36),
+        (23, 75),
+        (35, 70),
+        (20, 40),
+        (60, 100),
+    ]
 
-    plt.title('Fingerprint Intersection Rate')
-    plt.xlabel('Time in seconds')
-    plt.ylabel('Number of fingerprints')
+    x = list(map(lambda x: x[0], points))
+    y = list(map(lambda x: x[1], points))
 
-    plt.legend()
+    plt.title('Grid Example')
+    plt.xlabel('Time intervals')
+    plt.ylabel('Frequency intervals')
+
+    plt.scatter(x, y)
+    plt.grid(True)
+
     plt.show()
 
 

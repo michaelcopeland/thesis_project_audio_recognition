@@ -265,7 +265,7 @@ class Fingerprint:
             plt.grid(True)
             plt.show()
         # print('freq coords: {}\ntime coords: {}'.format(freq_coords, time_coords))
-
+        print(str_peaks)
         return str_peaks
 
     def generate_hashes(self, peaks, fan_value=DEFAULT_FAN_VALUE):

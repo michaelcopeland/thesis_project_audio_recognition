@@ -1,5 +1,3 @@
-# Based on Will Drevo's DejaVu
-
 import MySQLdb as mysql
 
 WAV_DB                      = 'audioExtraction'
@@ -229,6 +227,11 @@ def delete_fgp_by_song(list_song_n):
 
 
 def delete_songs(list_song_n):
+    """Deletes songs from the database
+
+    Attributes:
+         list_song_n - a list of song names to remove from database
+    """
     songs = ', '.join(str('\'' + x + '\'') for x in list_song_n)
 
     delete_statement = DELETE_SONGS % songs
@@ -279,7 +282,6 @@ def get_songs_by_fgp_status(is_fgp=0):
     Return:
         res_list - a list of song names
     """
-
     select_query = SELECT_SONG_BY_FGP % is_fgp
 
     try:
@@ -298,6 +300,15 @@ def get_songs_by_fgp_status(is_fgp=0):
 
 
 def get_song_by_name(song_name):
+    """Checks if a song name is available in the database.
+
+    Attributes:
+        song_name - name of song to query
+
+    Returns:
+        True, song name, 1 - if song is found
+        False, empty string, 0 - if song is not found
+    """
     select_query = SELECT_SONG_NAME % song_name
 
     song_id = 0
@@ -336,7 +347,7 @@ def query_all_fingerprints():
             yield (s_name, h_key, t_offset)
 
     except:
-        print('Error retrieving all fingerprints')
+        print('Error query_all_fingerprints')
         connection.rollback()
 
 
@@ -360,6 +371,8 @@ def query(hashkey=None):
 
 
 def get_matches(list_of_hashes):
+    """Receives a list of SHA1 hash digests. Queries the database and returns
+    a generator object of matching songs and their time index precision."""
     map = dict()
     for hash_key, offset in list_of_hashes:
         map[hash_key] = offset
@@ -385,9 +398,10 @@ def get_matches(list_of_hashes):
         yield (song_name, time_offset - map[hash_k])
 
 
+# ensure connection is established and cursor is created
 connection = connect()
 cur = connection.cursor()
-# For indexing: ensure large buffer size
+# ensure large buffer size
 cur.execute('set global max_allowed_packet=67108864')
 
 if __name__=='__main__':

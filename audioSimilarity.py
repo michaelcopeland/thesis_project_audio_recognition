@@ -158,7 +158,6 @@ def compute_sim(primary):
             print(grd, primary, s)
 
 
-
 def get_similarity(list_dir, grid_setup):
     """Receives a list of folders each containing audio files.
     Returns the similarity values per grid size for each folder.
@@ -216,8 +215,7 @@ if __name__=='__main__':
         for tr2 in dir_map.keys():
             if tr1 != tr2:
                 sim = compute_jaccard(tr1, tr2)
-                if sim > 0.7:
-                    print(sim, tr1, '||', tr2)
+                print(sim, tr1, '||', tr2)
 
     #track = 'D:\\xmpeg-bulgar\\King Crimson\\Larks Tongues In Aspic\\01. I Larks Tongues Aspic, Part One.mp3'
     #plot_wave(track)

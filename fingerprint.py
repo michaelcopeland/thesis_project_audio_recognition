@@ -230,8 +230,7 @@ class Fingerprint:
         return 'invalid', 'invalid'
 
     def grid_filter_peaks(self, peaks, plot=False):
-        """
-        Filters the peaks.
+        """Filters the peaks.
 
         Attributes:
             peaks - a zip of frequency and time points
@@ -269,11 +268,22 @@ class Fingerprint:
         return str_peaks
 
     def generate_hashes(self, peaks, fan_value=DEFAULT_FAN_VALUE):
+        """Generates fingerprints from list of peaks
+
+        Attributes:
+            peaks     - list of time and frequency coordinates
+            fan_value - number of related peaks to consider
+
+        Return:
+            generator object of fingerprints
+        """
         if PEAK_SORT:
             # sorting peaks by frequency
             sorted(peaks, key=itemgetter(0))
 
+        # each peak i is an anchor point
         for i in range(len(peaks)):
+            # check within the fan value
             for j in range(1, fan_value):
                 if (i + j) < len(peaks):
 
@@ -287,7 +297,7 @@ class Fingerprint:
 
                     # print('freq1: {}, freq2: {}, t1: {}, t2: {}, tdelta: {}'.format(freq1, freq2, t1, t2, tdelta))
 
-                    # min is 0, max is 200
+                    # ensure you are operating with the target zone
                     if (tdelta >= MIN_HASH_TIME_DELTA) and (tdelta <= MAX_HASH_TIME_DELTA):
                         # string needs encoding for hashing to work
                         string_to_hash = '{}{}{}'.format(str(freq1), str(freq2), str(tdelta)).encode('utf-8')

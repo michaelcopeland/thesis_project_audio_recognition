@@ -10,7 +10,7 @@ from pydub import AudioSegment
 
 
 class AudioHelper:
-    """This class handles audio data of a 24-bit encoding"""
+    """This class handles audio data of a 24-bit encoding. Not used in fingerprinting."""
 
     def __init__(self, filename):
         self.filename = filename
@@ -171,22 +171,22 @@ def retrieve_audio_mpeg(filename, limit=None):
 
     return num_channels, frame_rate, channels
 
-# testing main
 if __name__ == '__main__':
-    file = 'C:\\Users\\Vlad\\Documents\\thesis\\audioExtraction\\wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Creative Audio Pool - INCREDIBLE SOUNDS OF INDIA COLLECTION\\DAYTIME JUNCTION 14.wav'
-
-    nc, f, data = retrieve_audio(file, limit=None)
-    #fs, datas = retrieve_audio_data(file, limit=2)
-    print(nc, ' ', f)
-
-    print('f_rate=', f)
-
-    #print(len(data), ' ', len(datas))
-    print(np.shape(data))
-    #print(np.shape(datas))
-
-    print(data)
-    #print(datas)
+    print('hello world')
+    # file = 'C:\\Users\\Vlad\\Documents\\thesis\\audioExtraction\\wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Creative Audio Pool - INCREDIBLE SOUNDS OF INDIA COLLECTION\\DAYTIME JUNCTION 14.wav'
+    #
+    # nc, f, data = retrieve_audio(file, limit=None)
+    # #fs, datas = retrieve_audio_data(file, limit=2)
+    # print(nc, ' ', f)
+    #
+    # print('f_rate=', f)
+    #
+    # #print(len(data), ' ', len(datas))
+    # print(np.shape(data))
+    # #print(np.shape(datas))
+    #
+    # print(data)
+    # #print(datas)
 
 
 

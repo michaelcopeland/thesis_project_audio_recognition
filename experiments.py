@@ -1,10 +1,12 @@
+# This script contains the methods used in testing
+# the Landmark algorithm
+
 import fingerprintWorker as fw
 import matplotlib.pyplot as plt
 import exportData as export
 import audioSimilarity as sim
 
 from matplotlib import pyplot as plt
-
 
 RESULT_DICT = {
     'TP': 0,
@@ -14,6 +16,7 @@ RESULT_DICT = {
     'FA': 0, # false accept
     'FAM_HIT': 0
 }
+
 num_tracks, db_tracks = fw.get_wavs_by_fgp(1)
 print('Welcome to the experiment script.\nNumber of unique database entries: {}'.format(num_tracks))
 
@@ -42,7 +45,6 @@ mp3_test_tracks = [
 '04. Givin The Dog A Bone.mp3',
 '10. Rock And Roll Aint Noise Pollution.mp3',
 ]
-
 
 def reset_result_dict():
     # safety print
@@ -171,6 +173,7 @@ def run_sensitivity_test():
         print('Limit: {} s'.format(lim))
         print(result)
 
+
 def run_exp4_align_weighted():
     limits = [1, 2, 4, 8]
     #limits = [4]
@@ -282,6 +285,7 @@ def run_test_list_colision_rate():
     print('num intersect', num_col_hash)
     return l_num_hash, num_col_hash
 
+
 def test_all_answers(song_in):
     """Tests whether algorithm correctly returns TP, TN, FP, FN"""
 
@@ -303,6 +307,7 @@ def test_all_answers(song_in):
     # result track name
     r_t_name = result_track['song name']
     print(r_t_name)
+
 
 def gen_plot():
 

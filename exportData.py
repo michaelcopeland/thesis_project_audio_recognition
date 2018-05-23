@@ -1,3 +1,5 @@
+# This script is used in storing or retrieving generated gridHash objects
+
 from datasketch import MinHash
 import numpy as np
 import fingerprintWorker as fw
@@ -13,7 +15,7 @@ mpeg_root       = 'D:\\xmpeg-bulgar'
 
 # test paths
 db_test         = 'D:\\db_test'
-test_export     = 'D:\\grid_test\\wav\\15075'
+test_export     = 'D:\\grid_test\\mp3\\7535'
 
 wav_test        = 'D:\\grid_test\\wav_test'
 flac_test       = 'C:\\Users\\Vlad\Documents\\thesis\\audioExtraction\\flac_test'
@@ -25,8 +27,6 @@ CUSTOM_EXT  = '.grid'
 
 
 ##### DIRECTORY STRUCTURE METHODS #####
-
-
 def _get_dir_structure(dir_path):
     """Returns all stored files"""
     files = []
@@ -38,6 +38,9 @@ def _get_dir_structure(dir_path):
 
 
 def has_valid_extension(path_to_file):
+    """Checks if file extension is valid
+    Valid extensions: '.wav', '.ogg', '.mp3', '.flac', '.grid', '.mpeg'
+    """
     path, ext = os.path.splitext(path_to_file)
     if ext in VALID_EXT:
         return True
@@ -73,9 +76,14 @@ def build_dir_map(root):
 
 
 ##### IO METHODS #####
-
-
 def export_file(file_name, data, dest_dir=EXPORT_PATH):
+    """Stores gridHash file to specified location
+
+    Attributes:
+        file_name - name of file
+        data      - information to package to the file
+        dest_dir  - file path
+    """
     name = file_name[:-4] + CUSTOM_EXT
     path = dest_dir + '\\' + name
 
@@ -92,6 +100,15 @@ def export_file(file_name, data, dest_dir=EXPORT_PATH):
 
 
 def load_grid(file_name, local_dir=test_export):
+    """Loads gridHash file from specified location.
+
+    Attributes:
+        file_name - name of file to load
+        local_dir - load path
+
+    Return:
+        data - retrieved information
+    """
     path = local_dir + '\\' + file_name
     filename, ext = os.path.splitext(path)
 
@@ -105,8 +122,13 @@ def load_grid(file_name, local_dir=test_export):
 
 
 ##### minHash helper method ######
-
 def get_minHash(input_set):
+    """Generates minHash object from input set
+    Attributes:
+        input_set - list of strings to minHash
+    Returns:
+        minHash object
+    """
     min_h = MinHash()
 
     for itm in input_set:
@@ -116,6 +138,7 @@ def get_minHash(input_set):
 
 
 def export_many(limit=0):
+    """Exports multiple gridHash objects"""
     # initialize counter for files to be indexed
     counter = 0
     # build directory maps

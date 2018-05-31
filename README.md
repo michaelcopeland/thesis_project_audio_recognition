@@ -15,6 +15,6 @@ In order to recognize a specific song run the main method of experiments.py and 
 # Your patience is appreciated:
 
 I will integrate microphone recognition and the possibility to pass arguments from the command line as soon as possible.
-That will make this read me a bit more direct.
+That will eleminate the current hurdles. Thank you.
 
 In the mean time, the thesis-doc folder of this repo contains a Master thesis document detailing this implementation and the differences from DejaVu.

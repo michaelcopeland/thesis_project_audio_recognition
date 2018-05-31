@@ -1,32 +1,20 @@
-# Landmark based audio fingerprinter
+# How to:
 
-In order to fingerprint a .wav song:
+This fork of DejaVu includes a few improvements to the code, a similarity search feature I call GridHash and a PDF of a master thesis explaining many implementation details.
 
-<pre> python pyFingerprint.py yourfile.wav </pre>
+In order to fingerprint audio you require a MySQL database and a local folder where you store a number of audio tracks.
 
-It works for 32, 16, and 8 bit wav. Still working on the 24-bit.
+Inlcude the database name of your database to: <pre> database.py </pre>
 
-Requirements:
-matplotlib
-numpy
-pyaudio
-pydub
-wave
-scipy
-hashlib
+Include the path to the directory where you store your audio in: <pre> exportData.py </pre>
 
-######OTHER STUFF########
+In order to fingerprint and add tracks to the database run the main method of fingerprintWorker.py and modify the number of songs you want indexed.
 
-The featureEx class can extract the spectral domain from a wave file. It computes a spectrogram and can split it into a number of chunks.
+In order to recognize a specific song run the main method of experiments.py and modify the path.
 
-Currently working on a hash function similar to the one used by the Landmark algorithm.
+# Your patience is appreciated:
 
-Running the script from cmd: <pre>python featureEx.py file_path</pre>
-This will read the file, display inforamtion regarding its encoding. It will break it up into chunks and return top frequency points.
+I will integrate microphone recognition and the possibility to pass arguments from the command line as soon as possible.
+That will make this read me a bit more direct.
 
-The spectrumAnalyzer class gets an input stream from the laptop mic and plots the real time wave form.
-Also displays FFT of microphone audio stream.
-
-The spectrum analyzer QT uses pyqtgraph instead of matplot lib
-Reference: https://github.com/markjay4k/Audio-Spectrum-Analyzer-in-Python/blob/master/audio_spectrumQT.pyR
-Breaking up file into chunks: https://github.com/notexactlyawe/abracadabra/blob/master/fingerprint.ipynb
+In the mean time, the thesis-doc folder of this repo contains a Master thesis document detailing this implementation and the differences from DejaVu.

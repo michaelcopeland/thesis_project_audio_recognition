@@ -274,22 +274,7 @@ def get_wavs_by_fgp(is_fgp=0):
 
 
 if __name__ == '__main__':
-
-    fgp_api.set_grid_attributes(75, 75, 35, 35)
-    set_data = fingerprint_worker(test1, limit=8, verbose=False, grid_only=True, plot=False)
-    #fingerprint_songs(song_limit=1)
-    # test1 = 'D:\\thesis-data\\a-wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Chris Skyes - The Black Sea\\SFX Large Wave Splash on Rocks 21.wav'
-    # #test1 = 'D:\\xmpeg-bulgar\\Black Keys\\El Camino\\07. Sister.mp3'
-    #
-    # #(100, 100, 30, 30)
-    # #fgp_api.set_grid_attributes(100, 100, 10, 10)
-    #  # test1 = 'D:\\xmpeg-bulgar\\King Crimson\\Larks Tongues In Aspic\\01. I Larks Tongues Aspic, Part One.mp3'
-    # sn, hl = fingerprint_worker(test1, limit=2, verbose=True, grid_only=False, plot=False)
-    #
-    # matches = db.get_matches(hl)
-    #
-    # track, cand, res = align_matches_weighted(matches)
-    # print(len(cand.keys()))
-    # for itm in res:
-    #     print(itm)
-    # print(track)
+    num_songs_to_add_to_db=100 # adjust accordingly
+    
+    fingerprint_songs(song_limit=num_songs_to_add_to_db)
+  

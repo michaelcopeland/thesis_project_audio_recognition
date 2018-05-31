@@ -1,5 +1,7 @@
 import MySQLdb as mysql
 
+# adjust the database name accordingly. This implementation uses multiple databases
+
 WAV_DB                      = 'audioExtraction'
 MP3_DB                      = 'mpegExtraction'
 TEST_DATABASE               = 'test_audio'
@@ -23,7 +25,7 @@ def connect():
         port=3306,
         user='root',
         passwd='YOUR_PASS',
-        db='YOUR_DB'
+        db='YOUR_DB' # include your database name here
     )
     print('Connected to database!')
     return db

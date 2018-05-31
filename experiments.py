@@ -307,5 +307,14 @@ def test_all_answers(song_in):
     print(r_t_name)
 
 if __name__ == '__main__':
-    pass
+    path = '' # include the path to your song
+    limit = 0 # how many seconds to check from the song
+
+    sn, list_hash = fw.fingerprint_worker(path, limit=limit)
+
+    matches = fw.db.get_matches(list_hash)
+
+    result_track, matched_fam, res = fw.align_matches_weighted(matches)
+
+    print('Recognized track=',result_track)
 

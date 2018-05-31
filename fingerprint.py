@@ -1,8 +1,3 @@
-# Based on Will Drevo's dejavu
-#
-# Author: Will Drevo
-# URL: https://github.com/VladLimbean/dejavu/tree/master/dejavu
-
 import numpy as np
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
@@ -15,6 +10,8 @@ from operator import itemgetter
 IDX_FREQ_I = 0
 IDX_TIME_J = 1
 
+######################################################################
+# Size of the FFT window, affects frequency granularity
 DEFAULT_FREQ = 44100
 
 ######################################################################
@@ -23,6 +20,10 @@ DEFAULT_FREQ = 44100
 # TODO: check effects for different values
 DEFAULT_WINDOW_SIZE = 4096
 
+######################################################################
+# Ratio by which each sequential window overlaps the last and the
+# next window. Higher overlap will allow a higher granularity of offset
+# matching, but potentially more fingerprints.
 DEFAULT_OVERLAP_RATIO = 0.5
 
 ######################################################################
@@ -30,8 +31,16 @@ DEFAULT_OVERLAP_RATIO = 0.5
 # higher will cause more fingerprints, but potentially better accuracy.
 DEFAULT_FAN_VALUE = 15
 
+######################################################################
+# Minimum amplitude in spectrogram in order to be considered a peak.
+# This can be raised to reduce number of fingerprints, but can negatively
+# affect accuracy.
 DEFAULT_MIN_AMP = 10
 
+######################################################################
+# Number of cells around an amplitude peak in the spectrogram in order
+# for Dejavu to consider it a spectral peak. Higher values mean less
+# fingerprints and faster matching, but can potentially affect accuracy.
 PEAK_NEIGHBORHOOD_SIZE = 20
 
 ######################################################################
@@ -41,6 +50,10 @@ PEAK_NEIGHBORHOOD_SIZE = 20
 MIN_HASH_TIME_DELTA = 0
 MAX_HASH_TIME_DELTA = 200
 
+######################################################################
+# If True, will sort peaks temporally for fingerprinting;
+# not sorting will cut down number of fingerprints, but potentially
+# affect performance.
 PEAK_SORT = True
 
 ######################################################################
@@ -49,17 +62,8 @@ PEAK_SORT = True
 # potentially higher collisions and misclassifications when identifying songs.
 FINGERPRINT_REDUCTION = 20
 
-# TODO: generate a grid example later on
-######################################################################
-# Time and Frequency intervals and tolerances for the grid-hash
-# The interval values refer to the grid step on the time and frequency axes
-# The tolerance values refer to the area within the grid where a peak must be
-# in order for it be hashed.
-# If the peak is outside this grid area it will be discarded
-
-
 class Fingerprint:
-
+"""Handles fingerprint and gridHash construction"""
     def __init__(self):
         self.TIME_INTERVAL = 50
         self.FREQ_INTERVAL = 50

@@ -47,8 +47,6 @@ mp3_test_tracks = [
 ]
 
 def reset_result_dict():
-    # safety print
-    print(RESULT_DICT)
     for key in RESULT_DICT.keys():
         RESULT_DICT[key] = 0
 
@@ -308,35 +306,6 @@ def test_all_answers(song_in):
     r_t_name = result_track['song name']
     print(r_t_name)
 
-
-def gen_plot():
-
-    points = [
-        (0, 0),
-        (10, 20),
-        (37, 36),
-        (23, 75),
-        (35, 70),
-        (20, 40),
-        (60, 100),
-    ]
-
-    x = list(map(lambda x: x[0], points))
-    y = list(map(lambda x: x[1], points))
-
-    plt.title('Grid Example')
-    plt.xlabel('Time intervals')
-    plt.ylabel('Frequency intervals')
-
-    plt.scatter(x, y)
-    plt.grid(True)
-
-    plt.show()
-
-
 if __name__ == '__main__':
-    gen_plot()
-    #exp_aligned_matches()
-    #run_exp4_align_weighted()
-    #run_sensitivity_test()
+    pass
 

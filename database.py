@@ -22,8 +22,8 @@ def connect():
         host='127.0.0.1',
         port=3306,
         user='root',
-        passwd='iamfuzzy222',
-        db=WAV_DB
+        passwd='YOUR_PASS',
+        db='YOUR_DB'
     )
     print('Connected to database!')
     return db
@@ -135,6 +135,7 @@ def drop_all_tables():
 
 
 def setup():
+    """Creates datablase tables"""
     try:
         cur.execute(CREATE_SONGS_TABLE)
         print('Created songs table.')
@@ -406,4 +407,3 @@ cur.execute('set global max_allowed_packet=67108864')
 
 if __name__=='__main__':
     setup()
-    print('Hello world!')

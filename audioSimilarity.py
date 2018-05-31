@@ -1,4 +1,6 @@
-"""Stores audio information and allows to compute various similarity searches"""
+"""This script is mainly used for tests.
+compute_jaccard and the main script are used to get the 
+resemblance between two gridHash items"""
 
 from datasketch import MinHash
 from scipy.signal import correlate2d, correlate
@@ -12,6 +14,8 @@ import fingerprintWorker as fw
 
 
 class AudioSimilarity:
+    """[DEPRECATED]Class use to run cross signal cross correlation and other
+    regresion analysis."""
     def __init__(self):
         self.storedAudio = dict()
 
@@ -95,18 +99,8 @@ class AudioSimilarity:
         print('Linear regression:\n\nslope={}\nintercept={}\nr_val={}\np_val={}\nerr={}'.format(
             slope, intercept, r_value, p_value, std_err))
 
-
-def plot_wave(audio_file):
-    audio_file = hlp.retrieve_audio_mpeg(audio_file)
-    print(audio_file)
-    ch1 = audio_file[2][0]
-    ch2 = audio_file[2][1]
-
-    plt.plot(ch1, ch2, '-b', ch1, '-r', ch2, alpha=0.75)
-    plt.show()
-
-
 def minHash(set1, set2):
+    """Use minHash to compute the jaccard distance between two sets"""
     m1, m2 = MinHash(), MinHash()
 
     for d in set1:
@@ -115,51 +109,10 @@ def minHash(set1, set2):
         m2.update(d.encode('utf8'))
 
     sim = m1.jaccard(m2)
-    #print("Estimated Jaccard: ", sim)
-
-    #s1 = set(set1)
-    #s2 = set(set2)
-    #actual_jaccard = float(len(s1.intersection(s2))) / float(len(s1.union(s2)))
-    #print("Actual Jaccard: ", actual_jaccard)
-
     return sim
 
-
-def compute_sim(primary):
-    """Calculates Jaccard similarity of different audio tracks
-    It takes a primary track and minhashes it against other candidates
-
-    Attributes:
-        primary     - .grid file representing an audio track
-        candidates  - a list of matching files
-
-    Return:
-        res         - a list of songs with above 75% similarity
-    """
-    all_grids = export.build_dir_map(export.EXPORT_PATH)
-    prim_set = export.load_grid(primary)
-
-    # grids_to_load = set()
-    # for cand in candidates:
-    #     tup = cand[2].keys()
-    #
-    #     for sub_cand in tup:
-    #         grids_to_load.add(sub_cand)
-
-    # for grd in grids_to_load:
-    #     current = export.load_grid(grd)
-    #     s = minHash(prim_set, current)
-    #     if s > 0.75:
-    #         print(primary, grd, s)
-    for grd in all_grids.keys():
-        current = export.load_grid(grd)
-        s = minHash(prim_set, current)
-        if s > 0.75:
-            print(grd, primary, s)
-
-
 def get_similarity(list_dir, grid_setup):
-    """Receives a list of folders each containing audio files.
+    """[DEPRECATED]Receives a list of folders each containing audio files.
     Returns the similarity values per grid size for each folder.
 
     Attributes:
@@ -193,6 +146,7 @@ def get_similarity(list_dir, grid_setup):
 
 
 def compute_jaccard(s1, s2):
+    """Computes jaccard distance between two gridHash files"""
     dir_map = export.build_dir_map(export.test_export)
 
     c1 = None
@@ -209,6 +163,7 @@ def compute_jaccard(s1, s2):
 
 
 if __name__=='__main__':
+    # Compute jaccard dist between gridHash objects in a directory
     dir_map = export.build_dir_map(export.test_export)
 
     for tr1 in dir_map.keys():
@@ -216,27 +171,4 @@ if __name__=='__main__':
             if tr1 != tr2:
                 sim = compute_jaccard(tr1, tr2)
                 print(sim, tr1, '||', tr2)
-
-    #track = 'D:\\xmpeg-bulgar\\King Crimson\\Larks Tongues In Aspic\\01. I Larks Tongues Aspic, Part One.mp3'
-    #plot_wave(track)
-    #compute_sim('08. Have A Drink On Me.grid', None)
-    # list_paths=['wavs\\c',
-    #             'wavs\\river',
-    #             'wavs\\estring',
-    #             'wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Alexander Ahura -  Groats Part1',
-    #             'wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Bluezone Corporation - War Zone (Designed Explosions)',
-    #             'wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Bluezone Corporation - Titanium - Cinematic Trailer Samples',
-    #             'wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Borg Sound - Harley Davidson Sportster Iron 883',
-    #             'wavs\\Sonniss.com - GDC 2017 - Game Audio Bundle\\Borg Sound - Gym weights']
-    #
-    # path = 'D:\\thesis-data\\bulgar\\ACDC\\Back In Black'
-    #
-    # list_grid_setup = [(100, 100, 30, 30),
-    #                    (150, 150, 60, 60)]
-    #
-    # alternate_grid = [(150, 150, 60, 60),
-    #                   (200, 200, 70, 70),  # too high, but acceptable results
-    #                   (250, 250, 80, 80)]  # seems to cap
-    #
-    # get_similarity(path, alternate_grid)
 

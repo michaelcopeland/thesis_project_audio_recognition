@@ -1,6 +1,3 @@
-# Based on Will Drevo's DejaVu
-
-from fingerprint import Fingerprint
 import exportData as export
 import fingerprint as fgp
 import database as db
@@ -8,6 +5,9 @@ import audioHelper as hlp
 import os
 import time
 import math
+
+from fingerprint import Fingerprint
+
 
 fgp_api = Fingerprint()
 
@@ -153,7 +153,6 @@ def align_matches_weighted(list_matches):
     # each candidate is a tuple of (weight, (k,v))
     # default weight = 1
     # formula    = (e ^ -(|time_delta|)) + max time delta value over a candidate list
-    # formula alt= ((e ^ -(time_delta ^ 2)) / number of candidates of that key) - use this for stronger filtering
     for k, v in candidates.items():
         cand_weight = float(math.e ** (-abs(k))) * 1000
         max_t_freq = get_max_track_frequency(v)
@@ -276,7 +275,6 @@ def get_wavs_by_fgp(is_fgp=0):
 
 if __name__ == '__main__':
 
-    test1 = 'D:\\xmpeg-bulgar\\King Crimson\\Larks Tongues In Aspic\\01. I Larks Tongues Aspic, Part One.mp3'
     fgp_api.set_grid_attributes(75, 75, 35, 35)
     set_data = fingerprint_worker(test1, limit=8, verbose=False, grid_only=True, plot=False)
     #fingerprint_songs(song_limit=1)

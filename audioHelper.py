@@ -1,3 +1,7 @@
+"""Reads audio files of different formats.
+Use retrieve_audio for anything BUT mp3
+Use retrieve_audio_mpeg for mp3
+"""
 import wave
 import numpy as np
 import pyaudio

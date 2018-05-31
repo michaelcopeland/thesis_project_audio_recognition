@@ -6,6 +6,8 @@ import fingerprintWorker as fw
 import pickle
 import os
 
+# You may want to set your own paths
+
 #file paths
 EXPORT_PATH     = 'C:\\Users\\Vlad\\Documents\\thesis\\audioExtraction\\exported_grids'
 WAV_GRIDS       = 'C:\\Users\\Vlad\\Documents\\thesis\\audioExtraction\\wav_grids'

@@ -62,8 +62,9 @@ PEAK_SORT = True
 # potentially higher collisions and misclassifications when identifying songs.
 FINGERPRINT_REDUCTION = 20
 
+
 class Fingerprint:
-"""Handles fingerprint and gridHash construction"""
+    """Handles fingerprint and gridHash construction"""
     def __init__(self):
         self.TIME_INTERVAL = 50
         self.FREQ_INTERVAL = 50

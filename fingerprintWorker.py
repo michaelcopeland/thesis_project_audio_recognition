@@ -53,13 +53,6 @@ def fingerprint_worker(file_path, limit=None, grid_only=False, verbose=False, pl
     return song_name, result
 
 
-def reset_database():
-    """drops all tables and recreates the db"""
-    db.connect()
-    db.drop_all_tables()
-    db.setup()
-
-
 def insert_wav_to_db(song_n):
     #db.connect()
     song_name, list_hash = fingerprint_worker(song_n, limit=None)
@@ -202,11 +195,9 @@ def align_matches_weighted(list_matches):
     return track, candidates, res
 
 
-def fingerprint_songs(reset_db=False, song_limit=None):
-    dir_structure = export.build_dir_map(export.mpeg_root)
-
-    if reset_db:
-        reset_database()
+def fingerprint_songs(user_path='', song_limit=None):
+    #dir_structure = export.build_dir_map(export.mpeg_root)
+    dir_structure = export.build_dir_map(user_path)
 
     # get fingerprinted files
     number_fgp, already_fingerprinted = get_wavs_by_fgp(1)

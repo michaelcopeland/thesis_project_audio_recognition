@@ -1,7 +1,12 @@
 import MySQLdb as mysql
+from wrapper import Wrapper
 
-# adjust the database name accordingly. This implementation uses multiple databases
+# USER DATBASE
+USER          = 'root'
+USER_HOST     = '127.0.0.1'
+USER_PORT     = 3306
 
+# LEGACY DATABASES
 WAV_DB                      = 'audioExtraction'
 MP3_DB                      = 'mpegExtraction'
 TEST_DATABASE               = 'test_audio'
@@ -19,22 +24,39 @@ SONGS_FIELD_SONG_NAME       = 'song_name'
 SONGS_FIELD_FINGERPRINTED   = 'is_fingerprinted'
 
 
-def connect():
-    db = mysql.connect(
-        host='127.0.0.1',
-        port=3306,
-        user='root',
-        passwd='YOUR_PASS',
-        db='YOUR_DB' # include your database name here
-    )
-    print('Connected to database!')
-    return db
+class Database(object):
+
+    def __init__(self, host, port, user, pswd, db_name):
+        super(Database, self).__init__()
+        self.host = host
+        self.port = port
+        self.user = user
+        self.pswd = pswd
+        self.db_name = db_name
+
+    def connect(self):
+        db = mysql.connect(
+            host=self.host,
+            port=self.port,
+            user=self.user,
+            passwd=self.pswd,
+            db=self.db_name
+        )
+        print('Connected to database!')
+        return db
+
+    def close_database(self):
+        connection.close()
+        print('Connection closed.')
 
 
-def close_database():
-    connection.close()
-    print('Connection closed.')
-
+config = interface.get_config()
+# ensure connection is established and cursor is created
+db = Database(config.host, config.port, config.user, config.pswd, config.db_name)
+connection = db.connect()
+cur = connection.cursor()
+# ensure large buffer size
+cur.execute('set global max_allowed_packet=67108864')
 
 ##### CREATE STATEMENTS #####
 
@@ -124,7 +146,6 @@ SELECT_SONG_BY_FGP = 'SELECT {} FROM {} WHERE {} = %s'.format(SONGS_FIELD_SONG_N
 UPDATE_IS_FINGERPRINTED = 'UPDATE {} SET {}=(%s) WHERE {} IN (%s)'.format(SONGS_TABLE,
                                                                           SONGS_FIELD_FINGERPRINTED,
                                                                           SONGS_FIELD_SONG_NAME)
-
 
 def drop_all_tables():
     try:
@@ -400,12 +421,11 @@ def get_matches(list_of_hashes):
         # print('result: ', hash_k, song_name, time_offset)
         yield (song_name, time_offset - map[hash_k])
 
-
-# ensure connection is established and cursor is created
-connection = connect()
-cur = connection.cursor()
-# ensure large buffer size
-cur.execute('set global max_allowed_packet=67108864')
+def reset_database():
+    """drops all tables and recreates the db"""
+    #connect()
+    drop_all_tables()
+    setup()
 
 if __name__=='__main__':
     setup()

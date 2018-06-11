@@ -1,0 +1,9 @@
+{
+    "database": {
+        "host": "127.0.0.1",
+        "user": "root",
+        "passwd": "",
+        "db": "test_audio",
+        "port": 3306
+    }
+}

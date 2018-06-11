@@ -1,10 +1,9 @@
 import sys
-#from fingerprintWorker import fingerprint_songs, reset_database
-
+import database as db
 
 class Wrapper(object):
 
-    def __init__(self, config):
+    def __init__(self, config, database_instance_or_connection):
 
         self.config = config
         # initialize database
@@ -24,3 +23,7 @@ class Wrapper(object):
 
     def info(self):
         return str(self.config)
+
+    def connect_to_db(self):
+        self.connection = db.connect()
+        self.cursor = self.connection.cursor()

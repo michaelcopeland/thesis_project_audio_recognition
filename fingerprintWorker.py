@@ -8,6 +8,7 @@ import math
 
 from fingerprint import Fingerprint
 
+# TODO: fingeprint worker will be a class that receives a wrapper to call the db instance
 
 fgp_api = Fingerprint()
 

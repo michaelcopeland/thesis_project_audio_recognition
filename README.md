@@ -1,4 +1,9 @@
 ![alt text](https://imgs.xkcd.com/comics/silence_2x.png)
+
+# Built currently unstable
+
+Working on a stable command line interface
+
 # How to:
 
 This fork of DejaVu includes a few improvements to the code, a similarity search feature I call GridHash and a PDF of a master thesis explaining many implementation details.

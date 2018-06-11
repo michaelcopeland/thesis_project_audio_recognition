@@ -3,7 +3,6 @@ import json
 import argparse
 
 from wrapper import Wrapper
-import fingerprintWorker as fw
 
 DB_CONFIG = 'cnf.cnf'
 
@@ -16,12 +15,8 @@ def load_config():
         print('Cannot load configuration file. Exiting application \n', str(err))
         sys.exit(1)
 
-    return config
-
-
-def get_config():
-    cnf = load_config()
-    return Wrapper(cnf)
+    # TODO: wrapper receives a db instance as a parameter
+    return Wrapper(config)
 
 
 if __name__ == '__main__':
@@ -36,23 +31,22 @@ if __name__ == '__main__':
     parser.add_argument('-db', '--database', action='store_true', help='View your database credentials')
     parser.add_argument('-r', '--reset_db', action='store_true', help='Drops the database tables')
 
-
     args = parser.parse_args()
 
     try:
         # set database configuration
-        wrapper = get_config()
+        wrapper = load_config()
     except IOError as err:
         print('Could not open config file \n', str(err))
         sys.exit(1)
 
     if args.database:
         print(wrapper.info())
+        wrapper.connect_to_db()
 
     if args.insert and args.count:
         path  = args.insert[0]
         count = args.count[1]
-        fw.fingerprint_songs(user_path=path, song_limit=count)
 
     if args.reset_db:
-        fw.reset_database()
+        pass

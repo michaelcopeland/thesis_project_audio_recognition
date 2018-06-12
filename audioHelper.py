@@ -16,8 +16,70 @@ from pydub import AudioSegment
 class AudioHelper:
     """This class handles audio data of a 24-bit encoding. Not used in fingerprinting."""
 
-    def __init__(self, filename):
-        self.filename = filename
+    CHUNK_SIZE  = 8096
+    FORMAT      = pyaudio.paInt16
+    CHANNELS    = 1
+    SAMPLE_RATE = 48000
+
+    def __init__(self):
+        self.filename = ''
+
+        self.audio = pyaudio.PyAudio()
+        self.stream = None
+        self.data = []
+        self.channels = AudioHelper.CHANNELS
+        self.chunksize = AudioHelper.CHUNK_SIZE
+        self.samplerate = AudioHelper.SAMPLE_RATE
+        self.recorded = False
+
+    def start_recording(self, channels=CHANNELS,
+                        samplerate=SAMPLE_RATE,
+                        chunksize=CHUNK_SIZE):
+
+        if self.stream:
+            self.stream.stop_stream()
+            self.stream.close()
+
+        self.stream = self.audio.open(
+            format=AudioHelper.FORMAT,
+            channels=channels,
+            rate=samplerate,
+            input=True,
+            frames_per_buffer=chunksize)
+
+        self.data = [[] for i in range(channels)]
+
+    def process_recording(self):
+        data = self.stream.read(self.chunksize)
+        nums = np.fromstring(data, np.int16)
+
+        for c in range(self.channels):
+            self.data[c].extend(nums[c::self.channels])
+
+    def stop_recording(self):
+        self.stream.stop_stream()
+        self.stream.close()
+        self.stream = None
+        self.recorded = True
+
+    def get_processed_data(self):
+        if not self.recorded:
+            raise IOError("Recording was not complete/begun")
+        return self.data
+
+    def get_recorded_time(self):
+        res = len(self.data[0]) / self.samplerate
+        print('recorded time=',res)
+        return res
+
+    def recognize(self, limit=10):
+        self.start_recording()
+        bound = int(self.samplerate / self.chunksize * int(limit))
+
+        for i in range(0, bound):
+            self.process_recording()
+        self.stop_recording()
+        return self.get_processed_data()
 
     def get_wav_audio_data(self, filename):
         """Reads audio data of a wave file
@@ -27,6 +89,7 @@ class AudioHelper:
             frame_rate   - rate of audio in Hz
             sample_width - width of sample
         """
+        self.filename = filename
         try:
             wave_form = wave.open(filename, 'r')
         except IOError:
@@ -70,8 +133,10 @@ class AudioHelper:
 
         return result
 
-    def play_wav(self):
+    def play_wav(self, filename):
         """Plays wav file"""
+
+        self.filename = filename
 
         print('play!')
         self.p = pyaudio.PyAudio()

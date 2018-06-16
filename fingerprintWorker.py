@@ -1,4 +1,3 @@
-import exportData as export
 import audioHelper as hlp
 import os
 import numpy as np
@@ -7,25 +6,33 @@ import math
 
 from fingerprint import Fingerprint
 from audioHelper import AudioHelper
-fgp_api = Fingerprint()
+from datasketch import MinHash
+import pickle
+import os
+
+
+##### SUPPORTED AUDIO FORMATS #####
+VALID_EXT   = ['.wav', '.ogg', '.mp3', '.flac', '.grid', '.mpeg']
+CUSTOM_EXT  = '.grid'
 
 
 class Worker(object):
 
     def __init__(self, db):
         self.fgp_db = db
+        self.fgp_api = Fingerprint()
 
     def mic_recognize(self, limit=None):
         if limit is None:
-            limit = 30
+            limit = 10
 
-        print('Microphone recognition: {} seconds'.format(limit))
+        print('Microphone listening for: {} seconds'.format(limit))
         self.mic = AudioHelper()
         result = set()
 
         mic_data = self.mic.recognize(limit=limit)
         for num_channels, channel in enumerate(mic_data):
-            hashes = fgp_api.fingerprint(channel, frame_rate=self.mic.samplerate, verbose=True, plot=True)
+            hashes = self.fgp_api.fingerprint(channel, frame_rate=self.mic.samplerate, verbose=True, plot=True)
 
             result |= set(hashes)
         return result
@@ -46,10 +53,10 @@ class Worker(object):
 
         for num_channels, channel in enumerate(audio_data):
             # print('Channel number:', num_channels+1)
-            hashes = fgp_api.fingerprint(channel, frame_rate=frame_rate, verbose=verbose, plot=plot)
+            hashes = self.fgp_api.fingerprint(channel, frame_rate=frame_rate, verbose=verbose, plot=plot)
 
             if grid_only:
-                return fgp_api.fingerprint(channel, frame_rate=frame_rate, grid_only=grid_only, plot=plot)
+                return self.fgp_api.fingerprint(channel, frame_rate=frame_rate, grid_only=grid_only, plot=plot)
 
             result |= set(hashes)
 
@@ -144,8 +151,7 @@ class Worker(object):
         return track, candidates, res
 
     def fingerprint_songs(self, user_path='', num_tracks=None):
-        #dir_structure = export.build_dir_map(export.mpeg_root)
-        dir_structure = export.build_dir_map(user_path)
+        dir_structure = self.build_dir_map(user_path)
 
         # get fingerprinted files
         number_fgp, already_fingerprinted = self.get_wavs_by_fgp(1)
@@ -171,7 +177,7 @@ class Worker(object):
 
             # avoid invalid extensions
             _pth, ext = os.path.splitext(path)
-            if ext not in export.VALID_EXT:
+            if ext not in VALID_EXT:
                 continue
 
             # insert song returns true if it managed, false otherwise
@@ -210,4 +216,177 @@ class Worker(object):
         number_of_tracks = len(clean_list)
         return number_of_tracks, clean_list
 
-  
+######################################################################
+#
+# GRIDHASH ALGORITHM
+#
+######################################################################
+
+    ##### DIRECTORY STRUCTURE METHODS #####
+
+    def _get_dir_structure(self, dir_path):
+        """Returns all files from a specified directory"""
+        files = []
+
+        for (dirpath, dirname, filenames) in os.walk(dir_path):
+            files.append([dirpath, filenames])
+
+        return files
+
+    def has_valid_extension(self, path_to_file):
+        """Checks if file extension is valid
+        Valid extensions: '.wav', '.ogg', '.mp3', '.flac', '.grid', '.mpeg'
+        """
+        path, ext = os.path.splitext(path_to_file)
+        if ext in VALID_EXT:
+            return True
+        return False
+
+    def build_dir_map(self, root):
+        """creates a dictionary directory structure.
+        It maps files to their relative path.
+
+        file.wav -> c//dir/dir2/dir_with_wavs
+
+        Attributes:
+            root - where to start looking
+
+        Return:
+            map  - dictionary structure
+        """
+        dir_struct = self._get_dir_structure(root)
+        map = dict()
+
+        for tup in dir_struct:
+            current_directory = tup[0]
+            files_in_dir      = tup[1]
+
+            for f in files_in_dir:
+                path = os.path.join(current_directory, f)
+                # add key if not already in dict and if file has a valid extension
+                if f not in map and self.has_valid_extension(path):
+                    map[f] = current_directory
+
+        return map
+
+
+    ##### IO METHODS #####
+
+    def export_file(self, file_name, data, dest_dir=''):
+        """Stores gridHash file to specified location
+
+        Attributes:
+            file_name - name of file
+            data      - information to package to the file
+            dest_dir  - file path
+        """
+        name = file_name[:-4] + CUSTOM_EXT
+        path = os.path.join(dest_dir, name)
+
+        with open(path, mode='wb') as f:
+            try:
+                min_data = self.get_minHash(data)
+                pickle.dump(min_data, f)
+                f.close()
+                print('Exported: {}'.format(name))
+                return True
+            except:
+                print('Export failed: {}'.format(name))
+                return False
+
+    def load_grid(self, file_name, local_dir=''):
+        """Loads gridHash file from specified location.
+
+        Attributes:
+            file_name - name of file to load
+            local_dir - load path
+
+        Return:
+            data - retrieved information
+        """
+        path = os.path.join(local_dir, file_name)
+        filename, ext = os.path.splitext(path)
+
+        if ext != CUSTOM_EXT:
+            path = path[:-len(ext)] + CUSTOM_EXT
+
+        with open(path, 'rb') as f:
+            data = pickle.load(f)
+
+        return data
+
+    ##### minHash generators ######
+
+    def get_minHash(self, input_set):
+        """Generates minHash object from input set
+        Attributes:
+            input_set - list of strings to minHash
+
+        Returns:
+            minHash object
+        """
+        min_h = MinHash()
+
+        for itm in input_set:
+            min_h.update(itm.encode('utf8'))
+
+        return min_h
+
+    def export_many(self, files_in, files_out, limit=0):
+        """Exports multiple gridHash objects"""
+        # initialize counter for files to be indexed
+        counter = 0
+        # build directory maps
+        dir_map = self.build_dir_map(files_in)
+        indexed = self.build_dir_map(files_out)
+
+        # if no number of files is specified, process all files
+        if limit == 0:
+            limit = len(dir_map.keys())
+
+        print('Info:\n',
+              'There are {} available audio files.\n'.format(len(dir_map.keys())),
+              'There are {} available gridHash files.\n'.format(len(indexed.keys()))
+              )
+
+        # go file by file
+        for tr in dir_map.keys():
+            if counter < limit:
+                # check if the file has not already been exported
+                pre = tr[:-4] + CUSTOM_EXT
+
+                if pre not in indexed.keys():
+                    _path      = os.path.join(dir_map[tr], tr)
+
+                    # ensure a valid extension
+                    if self.has_valid_extension(_path):
+                        set_data = self.fingerprint_worker(_path, grid_only=True, plot=False)
+                        #print(tr, set_data)
+
+                        # generate gridhash
+                        res = self.export_file(tr, set_data, dest_dir=files_out)
+
+                        if res:
+                            counter += 1
+                        else:
+                            return
+                else:
+                    print('Skipping: {} file already exists'.format(tr))
+
+        print('Exported {} grids'.format(counter))
+
+    def compute_jaccard(self, s1, s2, grid_folder):
+        """Computes jaccard distance between two gridHash files"""
+        dir_map = self.build_dir_map(grid_folder)
+
+        c1 = None
+        c2 = None
+
+        for itm in dir_map.keys():
+            if itm == s1:
+                c1 = self.load_grid(itm, local_dir=grid_folder)
+            if itm == s2:
+                c2 = self.load_grid(itm, local_dir=grid_folder)
+
+        sim = c1.jaccard(c2)
+        return sim

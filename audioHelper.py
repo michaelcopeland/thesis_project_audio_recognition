@@ -16,10 +16,10 @@ from pydub import AudioSegment
 class AudioHelper:
     """This class handles audio data of a 24-bit encoding. Not used in fingerprinting."""
 
-    CHUNK_SIZE  = 8096
+    CHUNK_SIZE  = 1024
     FORMAT      = pyaudio.paInt16
     CHANNELS    = 1
-    SAMPLE_RATE = 48000
+    SAMPLE_RATE = 44100
 
     def __init__(self):
         self.filename = ''

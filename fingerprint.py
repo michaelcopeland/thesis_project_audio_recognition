@@ -64,11 +64,11 @@ FINGERPRINT_REDUCTION = 20
 class Fingerprint:
     """Handles fingerprint and gridHash construction"""
     def __init__(self):
-        self.TIME_INTERVAL = 50
-        self.FREQ_INTERVAL = 50
+        self.TIME_INTERVAL = 100
+        self.FREQ_INTERVAL = 100
 
-        self.TIME_TOLERANCE = 20
-        self.FREQ_TOLERANCE = 20
+        self.TIME_TOLERANCE = 30
+        self.FREQ_TOLERANCE = 30
 
     def set_grid_attributes(self, t_int, f_int, t_tol, f_tol):
         """Set custom grid"""
@@ -78,7 +78,7 @@ class Fingerprint:
         self.TIME_TOLERANCE = t_tol
         self.FREQ_TOLERANCE = f_tol
 
-        print('\nTime interval= {}\nTime tolerance= {}\nFreq interval= {}\nFreq tolerance= {}'.format(
+        print('\nTime interval= {}\nTime tolerance= {}\nFreq interval= {}\nFreq tolerance= {}\n'.format(
             self.TIME_INTERVAL,
             self.TIME_TOLERANCE,
             self.FREQ_INTERVAL,
@@ -267,7 +267,6 @@ class Fingerprint:
             plt.grid(True)
             plt.show()
         # print('freq coords: {}\ntime coords: {}'.format(freq_coords, time_coords))
-        print(str_peaks)
         return str_peaks
 
     def generate_hashes(self, peaks, fan_value=DEFAULT_FAN_VALUE):

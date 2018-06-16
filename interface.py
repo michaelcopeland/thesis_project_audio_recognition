@@ -1,12 +1,11 @@
 import os
 import sys
 import json
-import argparse
+import argparse, argcomplete
 
 from wrapper import Wrapper
 
 DB_CONFIG = 'cnf.cnf'
-
 
 def load_config():
     try:
@@ -21,9 +20,8 @@ def load_config():
 
 if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser(description='Welcome to the audio search engine.'\
-                                     'The microphone recognition functionality is still under testing.'\
-                                     'Low accuracy levels.')
+    parser = argparse.ArgumentParser(description='Welcome to the audio search engine.\n'\
+                                                 'You can change all settings by modifying the cnf.cnf file')
     parser.add_argument('-i', '--insert',
                         type=str,
                         help='Folder from which to insert tracks to the database')           
@@ -39,7 +37,20 @@ if __name__ == '__main__':
     parser.add_argument('-rf', '--recognize_file', nargs=2,
                         help='Recognize a song from a file\n' \
                         '--recognize <path> <num_seconds>\n')
+    parser.add_argument('-ex', '--export', nargs=1,
+                        help='Creates gridhash objects from a specified number of audio files '\
+                        'and stores them in a preset location. If number is 0, all files are considered.\n'\
+                        'Usage: --export <int>')
+    parser.add_argument('-gs', '--gridsettings', action='store_true',
+                        help='View grid settings')
+    parser.add_argument('-sim', '--similarity', nargs=1, type=str,
+                        help='Takes one grid file and compares with other files. Returns Jaccard similarity'\
+                             ' coefficients between all grid files.')
+    parser.add_argument('-ls', '--list', nargs=1, type=str,
+                        help='Lists files in <grid> or <input> directory\n'\
+                        'Usage:\n -ls grid\n-ls input')
 
+    argcomplete.autocomplete(parser)
     args = parser.parse_args()
 
     try:
@@ -50,7 +61,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     if args.database:
-        print(wrapper.config_info())
+        wrapper.config_info()
         wrapper.get_connection()
 
     if args.insert and args.count:
@@ -69,12 +80,7 @@ if __name__ == '__main__':
         opt_arg = args.recognize[1]
 
         if source in ('mic', 'microphone'):
-            list_hash = wrapper.worker.mic_recognize(limit=opt_arg)
-
-            matches = wrapper.worker.fgp_db.get_matches(list_hash)
-
-            result_track, matched_fam, res = wrapper.worker.align_matches_weighted(matches)
-
+            res = wrapper.handle_recognize_from_mic(int(opt_arg))
             print('Recognized tracks:\n')
             for t in res:
                 print(t)
@@ -83,10 +89,28 @@ if __name__ == '__main__':
         path = os.path.abspath(args.recognize_file[0])
         limit = int(args.recognize_file[1])
 
-        sn, list_hash = wrapper.worker.fingerprint_worker(path, limit=limit)
+        res = wrapper.handle_recognize_from_file(path, limit)
+        print(res)
 
-        matches = wrapper.worker.fgp_db.get_matches(list_hash)
+    if args.gridsettings:
+        wrapper.pretty_print_grid_settings()
 
-        result_track, matched_fam, res = wrapper.worker.align_matches_weighted(matches)
+    if args.export:
+        count = args.export[0]
 
-        print('Recognized track= ', result_track)
+        wrapper.handle_grid_export(int(count))
+
+    if args.similarity:
+        prim = args.similarity[0]
+        print(prim)
+        wrapper.handle_sim(prim)
+
+    if args.list:
+        dir = args.list[0]
+
+        if dir == 'grid':
+            wrapper.handle_list_folder_contents(switch=False)
+        elif dir == 'input':
+            wrapper.handle_list_folder_contents(switch=True)
+        else:
+            print('<grid> to view contents of grid folder\n<input> to view contents of your source folder')

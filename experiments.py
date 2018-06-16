@@ -1,10 +1,6 @@
-# This script contains the methods used in testing
-# the Landmark algorithm
-
-import fingerprintWorker as fw
-import matplotlib.pyplot as plt
-import exportData as export
-import audioSimilarity as sim
+# This script was initially used to test the present implementation
+# It is here for reference and it may be integrated a bit later
+# However, as of the time of writing the script is not functional
 
 from matplotlib import pyplot as plt
 

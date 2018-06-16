@@ -5,5 +5,16 @@
         "passwd": "",
         "db": "",
         "port": 3306
+    },
+    "grid_settings": {
+        "time_interval": 100,
+        "freq_interval": 100,
+        "time_tolerance": 30,
+        "freq_tolerance": 30
+    },
+    "grid_paths":{
+        "files_in": "D:\\path to files you want to process with gridhash",
+        "files_out": "C:\\path to store gridhash objects"
+
     }
 }

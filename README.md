@@ -2,7 +2,7 @@
 
 # How to:
 
-This fork of DejaVu includes a few improvements to the code, a similarity search feature I call GridHash and a PDF of my master thesis explaining many implementation details.
+This fork of DejaVu includes a few improvements to the Landmark algorithm code, a similarity search feature I call GridHash and a PDF of my master thesis explaining many implementation details.
 
 # MySQL database:
 
@@ -35,6 +35,8 @@ If you want to clear everything in the database and reset your tables run the ki
 
 # Landmark algorithm
 
+The Landmark algorithm fingerprints songs to a database. Once fingerprinted, a song can be recognized by listening to a few seconds of its content. You can listen via microphone or read from a disk.
+
 In order to fingerprint songs the idea is simple: Put all of your files in one directory and specify how many of them you want added to the database. For instance, to fingerprint 23 songs from the folder my_songs run the following line. You get the idea.
 
 <pre> python interface.py -i my_songs -c 23 </pre>
@@ -51,7 +53,7 @@ To recognize from the mic you must specify the number of seconds:
 
 The gridhash algorithm is a similarity calculating tool. It allows you to compare how similar one audio track is to another on a scale of 0 (totally disimilar) to 1 (identical). The algorithm works well on wave files and not so well on mp3s. I'm working on a few improvements.
 
-The algorithm takes audio files from one directory, processes them and then stores corresponding gridhash objects. Meaning that a song called "good times.mp3" from your input folder will result in "good times.grid" in your output folder. You can define the path to your desired folders in the cnf.cnf file:
+The algorithm takes audio files from one directory, processes them and then stores corresponding gridhash objects. Meaning that a song called "good times.mp3" from your input folder will result in "good times.grid" in your output folder. You can define the paths to your folders in the cnf.cnf file:
 
 <pre>
 "grid_settings": {
@@ -66,17 +68,17 @@ The algorithm takes audio files from one directory, processes them and then stor
 }
 </pre>
 
-You will have noticed the grid_settings section above. The values refer to the gridhash algorithm and are explained in the theis_paper.pdf. They can be left unchanged.
+You will have noticed the grid_settings section above. The values refer to the gridhash algorithm and are explained in the theis_paper.pdf. Unless you understand what they are I'd leave them in as defaults.
 
-Once you have defined your folders you can now process your audio files using the command bellow. The number specifies how many files to process. Pass 0 will process all of the files in your directory.
+Once you define your folders you can process audio files using the command bellow. The number specifies how many files to process. Pass 0 and you will have all of the files in your directory processed by the gridhash algorithm.
 
 <pre> python interface.py -ex 15 </pre>
 
-Once you are done with creating your gridhash objects, you can check the similarity of files in your grid folder:
+When done creating the gridhash objects, you can check the similarity between files like this:
 
 <pre> python interface.py -sim your_file.grid </pre>
 
-This will print the similarity, your_file.grid, some_other_file.grid in order of similarity. For example, if I run the command I receive this trace:
+This will print the similarity, your_file.grid, some_other_file.grid in order of similarity. For example, if I run the command above I receive this trace. So, song c1 is 81% similar to c2. The rest of the files are increasingly disimilar.
 <pre>
 (0.812, 'c1.grid', 'c2.grid')
 (0.211, 'c1.grid', 'cmd.grid')

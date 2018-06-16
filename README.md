@@ -53,7 +53,7 @@ In order to fingerprint songs the idea is simple: Put all of your files in one d
 
 <pre> python interface.py -i my_songs -c 23 </pre>
 
-You can recognize via microphone (sort of) and from a file. Notes on the microphone's issues in a moment.
+You can recognize via microphone (sort of) and from a file. 
 
 To recognize from a file you must pass the file path and the number of seconds:
 <pre> python interface.py -rf my_songs/everythingiscool.wav -c 4 </pre>

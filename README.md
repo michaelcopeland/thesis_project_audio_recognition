@@ -4,6 +4,18 @@
 
 This fork of DejaVu includes a few improvements to the Landmark algorithm code, a similarity search feature I call GridHash and a PDF of my master thesis explaining many implementation details.
 
+# Requirements:
+
+* [`soundfile`](https://pypi.org/project/SoundFile/) to grab audio that is not mp3
+* [`pyaudio`](http://people.csail.mit.edu/hubert/pyaudio/) for grabbing audio from microphone
+* [`ffmpeg`](https://github.com/FFmpeg/FFmpeg) to deal with .wav format
+* [`pydub`](http://pydub.com/), a Python `ffmpeg` wrapper
+* [`numpy`](http://www.numpy.org/) for taking the FFT of audio signals
+* [`scipy`](http://www.scipy.org/), used in peak finding algorithms
+* [`matplotlib`](http://matplotlib.org/), used for spectrograms and plotting
+* [`MySQLdb`](http://mysql-python.sourceforge.net/MySQLdb.html) for interfacing with MySQL databases
+* [`datasketch`](https://github.com/ekzhu/datasketch) for minHash implementation
+
 # MySQL database:
 
 In order to fingerprint audio you need a MySQL database. Add MySQL to your environment variables, then:

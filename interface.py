@@ -102,7 +102,6 @@ if __name__ == '__main__':
 
     if args.similarity:
         prim = args.similarity[0]
-        print(prim)
         wrapper.handle_sim(prim)
 
     if args.list:

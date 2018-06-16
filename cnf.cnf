@@ -13,8 +13,7 @@
         "freq_tolerance": 30
     },
     "grid_paths":{
-        "files_in": "D:\\path to files you want to process with gridhash",
-        "files_out": "C:\\path to store gridhash objects"
-
+        "files_in": "D:\\path\\to\\input\\folder",
+        "files_out": "C:\\path\\to\\output\\folder"
     }
 }
